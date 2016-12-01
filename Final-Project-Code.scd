@@ -40,3 +40,21 @@
 
 	out;
 };
+
+~drumRule = Dictionary.new(8);
+
+/*
+* Generate the dictionary representing a cellular automata rule based on the number
+*/
+~generateDrumRule = { arg num;
+	~drumRule = Dictionary.new(8);
+	~drumRule.put('[1,1,1]', floor(num/(2**7)) % 2);
+	~drumRule.put('[1,1,0]', floor(num/(2**6)) % 2);
+	~drumRule.put('[1,0,1]', floor(num/(2**5)) % 2);
+	~drumRule.put('[1,0,0]', floor(num/(2**4)) % 2);
+	~drumRule.put('[0,1,1]', floor(num/(2**3)) % 2);
+	~drumRule.put('[0,1,0]', floor(num/(2**2)) % 2);
+	~drumRule.put('[0,0,1]', floor(num/(2**1)) % 2);
+	~drumRule.put('[0,0,0]', floor(num/(2**0)) % 2);
+	~drumRule;
+};
