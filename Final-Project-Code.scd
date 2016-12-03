@@ -117,3 +117,35 @@
 	});
 	minRule;
 };
+
+///////////// The following is to be used after Kat's code to isolate motifs
+
+/*
+* Given a set of notes representing a motif, generate a new motif through Markhov models
+*/
+~markhovMotif = { arg notes;
+	var dict = Dictionary.new(notes.size); // Markhov model dictionary
+	var out = Array.new(notes.size); // New notes to be output
+
+	// Only calculate nonempty output if notes is nonempty
+	if(notes.size > 0, {
+		// Build the dictionary
+		for(0,notes.size-2, { arg i;
+			if(dict.at(notes[i]) == Nil, {
+				// Note not yet a key in dictionary
+				dict.put(notes[i], [notes[i+1]]);
+			}, {
+				// Note already in dictionary
+				dict.put(notes[i], dict.at(notes[i]) ++ [notes[i+1]]);
+			});
+		});
+
+		// Initialize first note of output
+		out.put(notes[0]);
+
+		// Each note generated from the Markhov chain of the previous note
+		for(1, numNotes-1, {arg i; out = out.add(dict.at(out[i-1]).choose)});
+	});
+
+	out;
+};
