@@ -149,3 +149,31 @@
 
 	out;
 };
+
+///////////// The following is a possible simple way to generate harmony notes above the track
+// It requires scale degrees instead of just notes
+
+// Seed for chord randomizer which is also random.
+var chordRandSeed = rrand(0,5) / 10;
+
+/*
+* Generates the string of notes at the scale degree 'above' above the base, with a random chance of not including each note and including a rest instead.
+Will be used to write the lines with the other chordal notes in each melody.
+* Source: Robert Tung Midterm Project
+*/
+var chordRandomizer = {arg degrees, above, randSeed;
+	var chordNotes = Array.new(degrees.size);
+	var randomVal = 0;
+
+	for(0, degrees.size - 1, {arg i;
+		randomVal = [0,1].wchoose([randSeed,1 - randSeed]); // Random chance of including note.
+		if(randomVal == 0, {
+			// Include chord note.
+			chordNotes.add((degrees[i] + above));
+		}, {
+			// Include rest instead.
+			chordNotes.add(\rest);
+		});
+	});
+	chordNotes;
+};
