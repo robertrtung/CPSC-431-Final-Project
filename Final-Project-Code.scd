@@ -47,32 +47,16 @@
 ~generateDrumRule = { arg num;
 	var drumRule;
 	drumRule = ('[ 1, 1, 1 ]': floor(num/(2**7)) % 2, '[ 1, 1, 0 ]': floor(num/(2**6)) % 2, '[ 1, 0, 1 ]': floor(num/(2**5)) % 2, '[ 1, 0, 0 ]': floor(num/(2**4)) % 2, '[ 0, 1, 1 ]': floor(num/(2**3)) % 2, '[ 0, 1, 0 ]': floor(num/(2**2)) % 2, '[ 0, 0, 1 ]': floor(num/(2**1)) % 2, '[ 0, 0, 0 ]': floor(num/(2**0)) % 2);
-	/*drumRule.put('[1,1,1]', floor(num/(2**7)) % 2);
-	drumRule.put('[1,1,0]', floor(num/(2**6)) % 2);
-	drumRule.put('[1,0,1]', floor(num/(2**5)) % 2);
-	drumRule.put('[1,0,0]', floor(num/(2**4)) % 2);
-	drumRule.put('[0,1,1]', floor(num/(2**3)) % 2);
-	drumRule.put('[0,1,0]', floor(num/(2**2)) % 2);
-	drumRule.put('[0,0,1]', floor(num/(2**1)) % 2);
-	drumRule.put('[0,0,0]', floor(num/(2**0)) % 2);*/
 	drumRule;
 };
 
 /*
 * Generate the array that represents the visual representation of a cellular automaton.
-* Source: Our own group's second group project.
+* Source: Our own group's second group project. (but modified slightly)
 */
 ~cellularAutomataArray = {arg size, rules;
 	var arr = Array.fill(size, {Array.fill(size, {0})}); // create an array full of 0s
-	// Initial seed: {0 1 4 5 7 11 12 16}. Transposed by (size / 2 - 8 ) to center the seed within the cellular automata
-	arr[0].put(size / 2 - 8, 1);
-	arr[0].put(size / 2 - 7, 1);
-	arr[0].put(size / 2 - 4, 1);
-	arr[0].put(size / 2 - 3, 1);
-	arr[0].put(size / 2 - 1, 1);
-	arr[0].put(size / 2 + 3, 1);
-	arr[0].put(size / 2 + 4, 1);
-	arr[0].put(size / 2 + 8, 1);
+	arr[0].put(size / 2, 1);
 	rules.postln;
 	rules.at('[,1,1]'.asSymbol).postln;
 
@@ -97,4 +81,39 @@
 	arr;
 };
 
-~cellularAutomataArray.(32, ~generateDrumRule.(30));
+/*
+* Get a column of the cellular automaton array that is used for drums.
+* Source: Our own group's second group project.
+*/
+~getDrumColumn = { arg col, drumSize, drumRules;
+	var drumArray, outArr;
+
+	// Get the Cellular Automaton array itself
+	drumArray = ~cellularAutomataArray.(drumSize, drumRules);
+
+	outArr = Array.new(drumArray.size);
+
+	// Build up the output column
+	for(1,drumArray.size, {arg i;
+		outArr = outArr.add(drumArray[i-1][col]);
+	});
+
+	// Return
+	outArr;
+};
+
+/*
+* Find the cellular automata rule whose middle column, interpreted as drum beats, most closely resembles the input
+*/
+~findClosestDrumRule = { arg drums;
+	var minDiff = drums.size + 1; // minimum difference between drums and rule found so far
+	var minRule = 1; // closest rule to output
+
+	// loop through rules and find the closest rule
+	for(1,255, {arg i;
+		if((drums-~getDrumColumn.(drums.size / 2, drums.size, ~generateDrumRule.(i))).sum < minDiff, {
+			minRule = i;
+		});
+	});
+	minRule;
+};
