@@ -40,3 +40,19 @@
 
 	out;
 };
+
+/*
+* Function to find any sequence of repeats in the song to break up the song into sections
+* takes in a list of lists of notes grouped by measure
+* returns a list of [start1, end1, start2, end2, etc...] values to indicate repeated sections
+* the bounds of the repeated section looks like: [start1, end1] <- inclusive on both sides
+*/
+~getRepeats = { arg notesArr;
+	var out = List[];
+	notesArr.do()
+	out;
+}
+
+
+
+
