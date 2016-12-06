@@ -2,7 +2,7 @@
 ~motifCount = 1;
 ~flagArray;
 ~motifDict = Dictionary.new();
-~testArray = [[1, 2], [3, 1], [4, 5], [1, 2], [3, 1], [0], [1, 2], [3, 1], [4, 5]];
+~testArray = [[1, 2], [3, 1], [4, 5], [1, 2], [3, 1], [0], [1, 2], [3, 1], [4, 5], [1, 5]];
 (
 //  CHOOSE THE FILE TO READ \\
 ~fileNameArray = ["mario_theme.xml", "traumerei.xml", "marry_you.xml"];
@@ -568,7 +568,7 @@ w.front;
 ~noteDurDictionaries = {arg melIndex, map;
 	var noteDur = ~extractLine.(~globalOutputArray, melIndex);
 	var id = 1;
-	var currRange;
+	var currRanges;
 	var notes = Dictionary.new(map.size);
 	var durs = Dictionary.new(map.size);
 	while({map.at(id) != nil}, {
