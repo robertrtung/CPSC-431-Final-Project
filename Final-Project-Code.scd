@@ -366,6 +366,29 @@
 
 (
 
+/*Get the melody line's notes with measureorganization*/
+/*~extractLineMeasureNotes = {arg input, voice;
+	var output = List[];
+	var notesToAdd = List[];
+	for(0, input.size - 2, {arg i;
+		// Each measure
+		for(0, input[i].size - 1, {arg j;
+			if(input[i][j][0] == voice, {
+				notesToAdd.add(input[i][j][1])
+			});
+		});
+
+		output.add(notesToAdd);
+		notesToAdd = List[];
+	});
+	output;
+};
+
+~extractLineMeasureNotes.value([[[1, 2, 3], [1, 2, 3]]], 1).postln;*/
+
+
+
+
 /*
 * Grab the harmony from the output of the MIDI, which is in an array of measures, each in an array of arrays, each containing [voice, pitch, duration]
 */
@@ -864,6 +887,7 @@
 	out;
 };
 
+
 // ~writeHarmonyLine.([5,4,3,1,2], [1,2,3,4,5], [1,2,3,4,5], [5,4,3,2,1], [1,1,2,2,3,3,4,4,5,5]);
 
 /*
@@ -879,7 +903,7 @@ Returns as [notes, durations]
 
 	// Build dictionaries of new motifs
 	for(1,durDict.size, {arg i;
-		currDur = ~durationGenerate(durDict.at(i));
+		currDur = ~durationGenerate.value(durDict.at(i));
 		newDurDict.put(i, currDur);
 		newNoteDict.put(i,~markhovMotif.(noteDict.at(i), currDur.size));
 	});
@@ -887,7 +911,7 @@ Returns as [notes, durations]
 	out[1] = [];
 
 	for(0, motifs.size - 1, {
-		out[0] = out[0] ++ newMoteDict.at(motifs[i]);
+		out[0] = out[0] ++ newNoteDict.at(motifs[i]);
 		out[1] = out[1] ++ newDurDict.at(motifs[i]);
 	});
 	out;
