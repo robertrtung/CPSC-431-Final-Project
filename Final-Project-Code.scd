@@ -2,7 +2,7 @@
 ~motifCount = 1;
 ~flagArray;
 ~motifDict = Dictionary.new();
-~testArray = [[1, 2], [3, 1], [4, 5], [1, 2], [3, 1], [0], [1, 2], [3, 1], [4, 5], [1, 5]];
+~testArray = [[1, 2], [3, 1], [4, 5], [1, 2], [3, 1], [0], [0, 1], [0, 2], [0, 3], [1, 5], [1, 2], [3, 1], [4, 5], [1, 5], [1, 10], [4]];
 (
 //  CHOOSE THE FILE TO READ \\
 ~fileNameArray = ["mario_theme.xml", "traumerei.xml", "marry_you.xml"];
@@ -483,9 +483,9 @@ w.front;
 };
 
 // Testing code
-~flagArray = ~getZeroFlagArray.value(~testArray.size);
-~getRepeatSectionDividers.value(~testArray, 0, List[3]);
-~flagArray;
+// ~flagArray = ~getZeroFlagArray.value(~testArray.size);
+// ~getRepeatSectionDividers.value(~testArray, 0, List[3]);
+// ~flagArray;
 
 
 /*
@@ -503,7 +503,7 @@ w.front;
 	~flagArray = ~getZeroFlagArray.value(measuresArr.size);
 
 	// Go through notes and find any sequences that are equal
-	while ( {measureIndex < measuresArr.size}, // for each measure
+	while ( {measureIndex < (measuresArr.size - 1)}, // for each measure
 		// Check that the measure has not been assigned to a motif yet
 		{ if (~flagArray[measureIndex] == 0,
 			// Go through all measures following the current one to see if any match
@@ -516,26 +516,32 @@ w.front;
 					);
 				});
 
-				// Get the dividers for the sections
-				dividersToAdd = ~getRepeatSectionDividers.value(measuresArr,
-					measureIndex, matches);
-				motifStart = dividersToAdd[dividersToAdd.size - 2];
-				motifEnd = dividersToAdd[dividersToAdd.size - 1]; // equivalent to the start of the next section
+				// Make sure we even have matches
+				if (matches.size != 0, {
+					// Get the dividers for the sections
+					dividersToAdd = ~getRepeatSectionDividers.value(measuresArr,
+						measureIndex, matches);
+					motifStart = dividersToAdd[dividersToAdd.size - 2];
+					motifEnd = dividersToAdd[dividersToAdd.size - 1]; // equivalent to the start of the next section
 
-				// Add the motif to the motif dictionary and increment the motif count
-				// The bounds of the motif are [motifStart, motifEnd)
-				~motifDict.put(~motifCount, [motifStart, motifEnd]);
-				~motifCount = ~motifCount + 1;
+					// Add the motif to the motif dictionary and increment the motif count
+					// The bounds of the motif are [motifStart, motifEnd)
+					~motifDict.put(~motifCount, [motifStart, motifEnd]);
+					~motifCount = ~motifCount + 1;
 
-				// Add any dividers that have not yet been added
-				dividersToAdd.do({ arg divider;
-					if ((dividers.includes(divider) == false) && (divider < measuresArr.size),
-						{dividers.add(divider)});
-				});
+					// Add any dividers that have not yet been added
+					dividersToAdd.do({ arg divider;
+						if ((dividers.includes(divider) == false) && (divider < measuresArr.size),
+							{dividers.add(divider)});
+					});
 
-				// Move to the end of the repeated section
-				measureIndex = motifEnd.postln;
-				matches = List[];
+					// Move to the end of the repeated section
+					measureIndex = motifEnd.postln;
+					matches = List[];
+				},
+				// Else there were no matches
+				{measureIndex = measureIndex + 1;});
+			// Else we already marked this measure as a part of a motif
 			},
 			{measureIndex = measureIndex + 1;}
 		);
@@ -547,6 +553,7 @@ w.front;
 
 ~getRepeatsDividers.value(~testArray).postln;
 ~flagArray.postln;
+~motifDict.postln;
 
 /*
 * From a list of dividers and a flagarray, determine the motif array.
@@ -870,7 +877,8 @@ After running xml_read portion of code, ~globalOutputArray has the song
 
 Assuming the harmony voice is number 2, to get the harmony, call ~oldHarm = ~extractLine.(~globalOutputArray, 2);
 
-Kat's code turns the ~globalOutputArray into a duration dictionary (ID -> array of durations for each motif), a note dictionary (ID -> array of notes for each motif), and an array of motifs (call ~determineMotifs on divs and flags). The dictionaries are found by calling ~noteDurDictionaries on the melody index (if the melody is voice 1 in ~globalOutputArray then this is 1), and ~globalOutputArray.
+Kat's code turns the ~globalOutputArray into a duration dictionary (ID -> array of durations for each motif), a note dictionary (ID -> array of notes for each motif), and an array of motifs (call ~determineMotifs on divs and flags). The dictionaries are found by calling ~noteDurDictionaries on the melody index (if the melody is voice 1 in ~globalOutputArray then this is 1), and ~globalOutputArray. (Use ~getRepeatsDividers to get the list of dividers. This function also creates a dictionary of ID-> array mappings as well as an array indicating what motifs each measure is associated with. From here, we may need to create dummy motifs out of the 0 flags in ~flagarray. The last element of the array may or may not be included in the dividers.)
+
 
 Call ~convertToLine on this output, lets say stored into ~oldMel
 
