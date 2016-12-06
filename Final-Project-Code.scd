@@ -382,7 +382,7 @@ w.front;
 ///////////////////////////////////////
 
 (
-~melodyDict = Dictionary.new();
+/*~melodyDict = Dictionary.new();
 
 /*
 * Generate the dictionary used for Markhov models on a set of notes
@@ -392,13 +392,14 @@ w.front;
 	~melodyDict = Dictionary.new(notes.size);
 	for(0, notes.size-2, {arg i;
 		if(~melodyDict.at(notes[i]) == Nil, {
-			~melodyDist.put(notes[i], [notes[i+1]]);
+			~melodyDict.put(notes[i], [notes[i+1]]);
 		}, {
-			temp = ~melodyDist.at(notes[i]);
+			temp = ~melodyDict.at(notes[i]);
 			temp = temp ++ [notes[i+1]];
-			~melodyDist.put(notes[i], temp);
+			~melodyDict.put(notes[i], temp);
 		});
 	});
+	~melodyDict;
 };
 
 /*
@@ -423,7 +424,7 @@ w.front;
 	for(1, numNotes-1, {arg i; out = out.add(~nextNote.(out[i-1]))});
 
 	out;
-};
+};*/
 
 /*
 * Generate the dictionary representing a cellular automata rule based on the number
@@ -485,6 +486,8 @@ w.front;
 	// Return
 	outArr;
 };
+
+// ~getDrumColumn.(10, 20, ~generateDrumRule.(25));
 
 /*
 * Find the cellular automata rule whose middle column, interpreted as drum beats, most closely resembles the input
@@ -569,6 +572,8 @@ w.front;
 	out;
 };
 
+// ~durationGenerate.([1,1,2,3,1,2,3,1,2,2,1,4,1,2,3,1,4,1,1]);
+
 /*
 * Takes an array of durations and just gives the beat numbers.
 */
@@ -582,6 +587,10 @@ w.front;
 	});
 	out;
 };
+
+// ~test = ~durationGenerate.([1,1,2,3,1,2,3,1,2,2,1,4,1,2,3,1,4,1,1]);
+// ~test.postln;
+// ~durToBeat.(~test,4);
 
 /*
 * Given a set of notes representing a motif, generate a new motif through Markhov models
@@ -626,7 +635,7 @@ w.front;
 // It requires scale degrees instead of just notes
 
 // Seed for chord randomizer which is also random.
-~chordRandSeed = rrand(0,5) / 10;
+/*~chordRandSeed = rrand(0,5) / 10;
 
 /*
 * Generates the string of notes at the scale degree 'above' above the base, with a random chance of not including each note and including a rest instead.
@@ -648,7 +657,7 @@ Will be used to write the lines with the other chordal notes in each melody.
 		});
 	});
 	chordNotes;
-};
+};*/
 
 /*
 * Given a melody line and a harmony line, determine what harmony note was playing when this melody note played.
@@ -669,8 +678,6 @@ Will be used to write the lines with the other chordal notes in each melody.
 			});
 		});
 	});
-
-	dursUntil.postln;
 
 	if(found == 0, {
 		out = note - 12;
@@ -693,17 +700,20 @@ Will be used to write the lines with the other chordal notes in each melody.
 	out;
 };
 
-~pullHarmonyNote.([5,4,3,1,2], [1,2,3,4,5], [1,2,3,4,5], [5,4,3,2,1], 1);
+// ~pullHarmonyNote.([5,4,3,1,2], [1,2,3,4,5], [1,2,3,4,5], [5,4,3,2,1], 1);
 
 /*
 * As a continuation to the above function, pull an entire harmony line from a melody line
 */
 ~writeHarmonyLine = {arg melNotes, melDurs, harmNotes, harmDurs, newMel;
-	out = Array.new(newMel.size);
+	var out = Array.new(newMel.size);
 	for(0,newMel.size-1, {arg i;
-		out = out.add(~pullHarmonyNote.(melNodes,melDurs,harmNotes,harmDurs,newMel[i]));
+		out = out.add(~pullHarmonyNote.(melNotes,melDurs,harmNotes,harmDurs,newMel[i]));
 	});
+	out;
 };
+
+// ~writeHarmonyLine.([5,4,3,1,2], [1,2,3,4,5], [1,2,3,4,5], [5,4,3,2,1], [1,1,2,2,3,3,4,4,5,5]);
 
 /*
 * Converts a dictionary of motif notes, a dictionary of motif durations, and an array of motif numbers into an array of notes and durations
