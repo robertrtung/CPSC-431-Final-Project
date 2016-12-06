@@ -861,6 +861,19 @@ Returns as [notes, durations]
 	out;
 };
 
+~oldMelodyNotes =  ~extractLine.(~globalOutputArray, 1)[0];
+~oldMelodyRhythms =  ~extractLine.(~globalOutputArray, 1)[1];
+
+~oldHarmonyNotes =  ~extractLine.(~globalOutputArray, 2)[0];
+~oldHarmonyRhythms =  ~extractLine.(~globalOutputArray, 2)[1];
+
+
+// Kat's lines
+
+~durs = ~dursAndMel[0]; // durations for melody and harmony
+~mel = ~dursAndMel[1]; // notes for melody
+~harm = ~writeHarmonyLine.(~oldMelodyNotes, ~oldMelodyRhythms, ~oldHarmonyNotes, ~oldHarmonyRhythms, ~mel); // notes for harmony
+
 /*
 INSTRUCTIONS: How everything works together:
 
