@@ -186,6 +186,20 @@
 };
 
 /*
+* Takes an array of durations and just gives the beat numbers.
+*/
+~durToBeat = {arg durs, bpm;
+	var soFar = 0;
+	var out = Array.new(durs.size);
+	for(0,durs.size-1, {arg i;
+		soFar = soFar + durs[i];
+		soFar = soFar % bpm;
+		out = out.add(soFar);
+	});
+	out;
+};
+
+/*
 * Given a set of notes representing a motif, generate a new motif through Markhov models
 */
 ~markhovMotif = { arg notes, numNotes;
