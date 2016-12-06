@@ -435,7 +435,7 @@ w.front;
 * Takes in an array size
 */
 ~getZeroFlagArray = { arg arrSize;
-	var outArray = List.new(3);
+	var outArray = List.new(arrSize);
 	arrSize.do({outArray.add(0)});
 	outArray;
 };
