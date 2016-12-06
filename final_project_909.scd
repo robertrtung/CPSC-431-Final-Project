@@ -5,7 +5,7 @@
 ~testArray = [[1, 2], [3, 1], [4, 5], [1, 2], [3, 1], [0], [0, 1], [0, 2], [0, 3], [1, 5], [1, 2], [3, 1], [4, 5], [1, 5], [1, 10], [4]];
 (
 //  CHOOSE THE FILE TO READ \\
-~fileNameArray = ["mario_theme.xml", "traumerei.xml", "marry_you.xml"];
+~fileNameArray = ["xml_mario_theme.xml", "xml_pokemon_theme.xml", "xml_pokemon_battle.xml"];
 ~fileName = ~fileNameArray[0];
 
 // ~globalOutputArray is the array you will use. it has MIDI note and duration
@@ -103,14 +103,14 @@
 	};
 
 
-	~noteValue = {arg string;
+/*	~noteValue = {arg string;
 		var length;
 		case
 		{string == "whole"}{length = 4}
 		{string == "half"}{length = 2}
 		{string == "quarter"}{length = 1}
 		{"NEED TO ADD A NEW VARIABLE"};
-	};
+	};*/
 
 	~getMIDI = { arg noteStr; // Input letter and octave number from 0-9
 		var len = noteStr.size; // Number of characters in the string
@@ -166,7 +166,7 @@
 	// > > > > > INSERT .XML FILE HERE < < < < < \\
 	//                     "~/path/fileName"                       \\
 	~longString = ~makeLongStringFromXML.value(
-		("~/Desktop/CPSC-431-Final-Project/"++~fileName));
+		("~/Desktop/CS431_final_project/"++~fileName));
 	//    > > > > > > > > ><  < < < < < < < < <   \\
 
 
@@ -360,6 +360,27 @@
 		i = i + 1;
 	});
 };
+
+/*
+* GUI code adapted from that of Group D Project 1.
+*/
+w = Window.new("Group Mare Tranquillitatis GUI", Rect(200,200,400,150));
+b = Button.new(w,Rect(150,80,150,30)).states_([["Analyze and Play"]]);
+
+p = PopUpMenu(w, Rect(150, 30, 200, 20));
+p.items = [
+	"Choose which file", "Mario Theme", "Pokemon Theme", "Pokemon Battle"
+];
+
+b.action = {
+	~fileName = ~fileNameArray[p.value-1];
+	~fileName.postln;
+	~analyze.value;
+};
+
+StaticText.new(w,Rect(50,30,60,20)).string_("File:  ");
+
+w.front;
 );
 
 ///////////////////////////////////////
@@ -534,38 +555,6 @@
 ~flagArray.postln;
 ~motifDict.postln;
 
-/*Function to go through the flag array and update all consecutive 0s to reflect a new motif; also updates the ~motifDict as it goes*/
-~handleZeroFlags = {
-	var currentIndex = 0;
-	var currentMotifStart = 0;
-	~flagArray;
-	~motifDict;
-	~motifCount = ~motifCount + 1;
-	while ({ currentIndex < ~flagArray.size},
-		// Find the first instance of a zero and
-		{if ( ~flagArray[currentIndex] == 0,
-			// Set the starting point and go reassign all 0 flags immediately following until we hit a non-zero or the end of the array
-			{currentMotifStart = currentIndex;
-				while({ currentIndex < ~flagArray.size && ~flagArray[currentIndex] == 0},
-					{~flagArray[currentIndex] = ~motifCount;
-						currentIndex = currentIndex + 1;
-					}
-				);
-				// We've finished setting the flag array, so we need to set the dictionary
-				~motifDict.put(~motifCount, [currentMotifStart, currentIndex]);
-				~motifCount = ~motifCount + 1;
-			}
-		);
-		// Update the current Index
-		currentIndex = currentIndex + 1;
-	});
-};
-
-~handleZeroFlags.value();
-~flagArray.postln;
-~motifDict.postln;
-~motifCount.postln;
-
 /*
 * From a list of dividers and a flagarray, determine the motif array.
 */
@@ -583,7 +572,11 @@
 /*
 * From the dictionary of (ID -> [start, end]) and the parsed MIDI, build the dictionary of durations and of motifs
 */
+
+
+
 ~noteDurDictionaries = {arg melIndex, map;
+
 	var noteDur = ~extractLine.(~globalOutputArray, melIndex);
 	var id = 1;
 	var currRanges;
@@ -867,44 +860,34 @@
 // ~writeHarmonyLine.([5,4,3,1,2], [1,2,3,4,5], [1,2,3,4,5], [5,4,3,2,1], [1,1,2,2,3,3,4,4,5,5]);
 
 /*
-* Converts a dictionary of motif notes, a dictionary of motif durations, and an array of motif numbers into a new generated array of notes and durations
+* Converts a dictionary of motif notes, a dictionary of motif durations, and an array of motif numbers into an array of notes and durations
 Returns as [notes, durations]
 */
 ~convertToLine = { arg durDict, noteDict, motifs;
 	var out = Array.new(2);
-
-	var newDurDict = Dictionary(durDict.size);
-	var newNoteDict = Dictionary(noteDict.size);
-	var currDur;
-
-	// Build dictionaries of new motifs
-	for(1,durDict.size, {arg i;
-		currDur = ~durationGenerate(durDict.at(i));
-		newDurDict.put(i, currDur);
-		newNoteDict.put(i,~markhovMotif.(noteDict.at(i), currDur.size));
-	});
 	out[0] = [];
 	out[1] = [];
-
 	for(0, motifs.size - 1, {
-		out[0] = out[0] ++ newMoteDict.at(motifs[i]);
-		out[1] = out[1] ++ newDurDict.at(motifs[i]);
+		out[0] = out[0] ++ noteDict.at(motifs[i]);
+		out[1] = out[1] ++ durDict.at(motifs[i]);
 	});
 	out;
 };
+
 
 ~oldMelodyNotes =  ~extractLine.(~globalOutputArray, 1)[0];
 ~oldMelodyRhythms =  ~extractLine.(~globalOutputArray, 1)[1];
 
 ~oldHarmonyNotes =  ~extractLine.(~globalOutputArray, 2)[0];
-~oldHarmonyRhythms =  ~extractLine.(~globalOutputArray, 2)[1];
 
 
 // Kat's lines
 
-~durs = ~dursAndMel[0]; // durations for melody and harmony
-~mel = ~dursAndMel[1]; // notes for melody
-~harm = ~writeHarmonyLine.(~oldMelodyNotes, ~oldMelodyRhythms, ~oldHarmonyNotes, ~oldHarmonyRhythms, ~mel); // notes for harmony
+~durs = ~durationGenerate.(~oldMel[1]); // durations for melody and harmony
+~mel = ~markhovMotif.(~oldMel[0], ~durs.size); // notes for melody
+~harm = ~writeHarmonyLine.(~oldMel[0], ~oldMel[1], ~oldHarm[0], ~oldHarm[1], ~mel); // notes for harmony
+
+
 
 /*
 INSTRUCTIONS: How everything works together:
@@ -914,58 +897,19 @@ After running xml_read portion of code, ~globalOutputArray has the song
 Assuming the harmony voice is number 2, to get the harmony, call ~oldHarm = ~extractLine.(~globalOutputArray, 2);
 
 Kat's code turns the ~globalOutputArray into a duration dictionary (ID -> array of durations for each motif), a note dictionary (ID -> array of notes for each motif), and an array of motifs (call ~determineMotifs on divs and flags). The dictionaries are found by calling ~noteDurDictionaries on the melody index (if the melody is voice 1 in ~globalOutputArray then this is 1), and ~globalOutputArray. (Use ~getRepeatsDividers to get the list of dividers. This function also creates a dictionary of ID-> array mappings as well as an array indicating what motifs each measure is associated with. From here, we may need to create dummy motifs out of the 0 flags in ~flagarray. The last element of the array may or may not be included in the dividers.)
->>> need to use ~getRepeatsDividers to get the dividers and then ~handleZeroFlags to finish editing the ~flagArray and ~motifDict
-
-// Makes sure to initialize ~flagArray = List[] and ~motifDict = Dictionary.new() and ~motifCount = 1 before doing anything
-var motif_dividers = ~getRepeatsDividers.value(~extractLine.value(~globalOutputArray, 1));
-~handleZeroFlags.value(); // Makes sure not to forget this step
-
-// After the above, flags are in ~flagArray and motif dictionary is in ~motifDict
-// Robert's code----
 
 
-
-
-var durations_divide
-
-
-Call ~convertToLine on this output, lets say stored into ~dursAndMel
+Call ~convertToLine on this output, lets say stored into ~oldMel
 
 After this, use the following lines to get the output melody notes and durations:
-~durs = ~dursAndMel[0]; // durations for melody and harmony
-~mel = ~dursAndMel[1]; // notes for melody
+~durs = ~durationGenerate.(oldMel[1}); // durations for melody and harmony
+~mel = ~markhovMotif.(~oldMel[0], ~durs.size); // notes for melody
 ~harm = ~writeHarmonyLine.(~oldMel[0], ~oldMel[1], ~oldHarm[0], ~oldHarm[1], ~mel); // notes for harmony
 
 Given that we currently don't take drums as input, drums can be generated just with: (where size is the length of the output you want)
 
 ~getDrumColumn.(size / 2, size, ~generateDrumRule.(255.rand)); // drum beats (an array of 0's and 1's where 0's are silences and 1's are drum hits)
 */
-
-);
-
-(
-
-/*
-* GUI code adapted from that of Group D Project 1.
-*/
-w = Window.new("Group Mare Tranquillitatis GUI", Rect(200,200,400,150));
-b = Button.new(w,Rect(150,80,150,30)).states_([["Analyze and Play"]]);
-
-p = PopUpMenu(w, Rect(150, 30, 200, 20));
-p.items = [
-	"Choose which file", "Mario Theme", "Traumerei", "Marry You"
-];
-
-b.action = {
-	~fileName = ~fileNameArray[p.value-1];
-	~fileName.postln;
-	~analyze.value;
-	// when play function is written, this will call that function
-};
-
-StaticText.new(w,Rect(50,30,60,20)).string_("File:  ");
-
-w.front;
 
 )
 )
