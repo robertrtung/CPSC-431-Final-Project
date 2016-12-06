@@ -253,17 +253,96 @@
 ///////////// The following is to be used after Kat's code to isolate motifs
 
 /*
+* Generate random durations to fit a certain number of beats, given an input set of durations
+*/
+~durationGenerate = { arg durs;
+	var dict = Dictionary.new(durs.size); // Markhov model dictionary
+
+	var totalCounts = durs.sum;
+	var out = Array.new(totalCounts); // New durations to be output
+	var next;
+	var break = 0;
+	var count = 0;
+
+	// Only calculate nonempty output if durs is nonempty
+	if(durs.size > 0, {
+		// Build the dictionary
+		for(0,durs.size-2, { arg i;
+			if(dict.at(durs[i]) == nil, {
+				// Duration not yet a key in dictionary
+				dict.put(durs[i], [durs[i+1]]);
+			}, {
+				// Duration already in dictionary
+				dict.put(durs[i], dict.at(durs[i]) ++ [durs[i+1]]);
+			});
+		});
+
+		// Initialize first duration of output
+		out = out.add(durs[0]);
+
+		// Each duration generated from the Markhov chain of the previous note
+		while({totalCounts > 0 && break == 0 && count < 40}, {
+			count = count +1;
+			if(dict.at(out[out.size-1]) == nil, {
+				if(totalCounts < durs.sort[0], {
+					break = 1;
+				});
+			});
+			if(dict.at(out[out.size-1]) != nil, {
+				if(totalCounts < dict.at(out[out.size-1]).sort[0], {
+					break = 1;
+				});
+			});
+			if(break == 0, {
+				// If the last duration was unique, it will not be in the dictionary, so we need to randomly give a note
+				if(dict.at(out[out.size-1]) == nil, {
+					next = durs.choose;
+				}, {
+					next = dict.at(out[out.size-1]).choose;
+				});
+
+				// Add values as long as we do not surpass the total number of counts
+				if(next < totalCounts, {
+					out = out.add(next);
+					totalCounts = totalCounts - next;
+				});
+			});
+		});
+
+		if(totalCounts > 0, {
+			out = out.add(totalCounts);
+		});
+	});
+
+	out;
+};
+
+/*
+* Takes an array of durations and just gives the beat numbers.
+*/
+~durToBeat = {arg durs, bpm;
+	var soFar = 0;
+	var out = Array.new(durs.size);
+	for(0,durs.size-1, {arg i;
+		soFar = soFar + durs[i];
+		soFar = soFar % bpm;
+		out = out.add(soFar);
+	});
+	out;
+};
+
+/*
 * Given a set of notes representing a motif, generate a new motif through Markhov models
 */
-~markhovMotif = { arg notes;
+~markhovMotif = { arg notes, numNotes;
 	var dict = Dictionary.new(notes.size); // Markhov model dictionary
-	var out = Array.new(notes.size); // New notes to be output
+	var out = Array.new(numNotes); // New notes to be output
 
 	// Only calculate nonempty output if notes is nonempty
 	if(notes.size > 0, {
 		// Build the dictionary
 		for(0,notes.size-2, { arg i;
-			if(dict.at(notes[i]) == Nil, {
+			if(dict.at(notes[i]) == nil, {
 				// Note not yet a key in dictionary
 				dict.put(notes[i], [notes[i+1]]);
 			}, {
@@ -273,14 +352,23 @@
 		});
 
 		// Initialize first note of output
-		out.put(notes[0]);
+		out = out.add(notes[0]);
 
 		// Each note generated from the Markhov chain of the previous note
-		for(1, numNotes-1, {arg i; out = out.add(dict.at(out[i-1]).choose)});
+		for(1, numNotes-1, {arg i;
+			// If the last duration was unique, it will not be in the dictionary, so we need to randomly give a note
+			if(dict.at(out[i-1]) == nil, {
+				out = out.add(notes.choose)
+			}, {
+				out = out.add(dict.at(out[i-1]).choose);
+			});
+		});
 	});
 
 	out;
 };
+
+// ~markhovMotif.([1,2,1,1,3,1,2,5,1,4], 10).postln;
 
 ///////////// The following is a possible simple way to generate harmony notes above the track
 // It requires scale degrees instead of just notes
