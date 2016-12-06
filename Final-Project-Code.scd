@@ -386,56 +386,30 @@ w.front;
 ///////////////////////////////////////
 
 (
-/*~melodyDict = Dictionary.new();
 
 /*
-* Generate the dictionary used for Markhov models on a set of notes
+* Grab the harmony from the output of the MIDI, which is in an array of measures, each in an array of arrays, each containing [voice, pitch, duration]
 */
-~generateMelodyDict = { arg notes;
-	var temp;
-	~melodyDict = Dictionary.new(notes.size);
-	for(0, notes.size-2, {arg i;
-		if(~melodyDict.at(notes[i]) == Nil, {
-			~melodyDict.put(notes[i], [notes[i+1]]);
-		}, {
-			temp = ~melodyDict.at(notes[i]);
-			temp = temp ++ [notes[i+1]];
-			~melodyDict.put(notes[i], temp);
+~extractLine = {arg input, voice;
+	var notes = [];
+	var durations = [];
+	for(0, input.size - 1, {arg i;
+		for(0,input[i].size - 1, {arg j;
+			if(input[i][j][0] == voice, {
+				notes = notes ++ input[i][j][1];
+				notes = notes ++ input[i][j][2];
+			});
 		});
 	});
-	~melodyDict;
+	[notes, durations];
 };
-
-/*
-* Function nextNote takes in the last note and chooses the next note based on Markov probabilities based on
-* the given Frere Jacques segment
-*/
-~nextNote = { arg note;
-	~melodyDict.at(note).choose;
-};
-
-/*
-* Function generateNotes takes in the starting note for the measure and the number of notes in the measure;
-* returns a measure of notes in an array
-*  Source: Group B (our own group) project 1 source code
-*/
-~generateNotes = { arg startingNote, numNotes;
-	// Output
-	var out = Array.new(numNotes);
-	out.add(startingNote);
-
-	// Each note generated from the Markhov chain of the previous note
-	for(1, numNotes-1, {arg i; out = out.add(~nextNote.(out[i-1]))});
-
-	out;
-};*/
 
 /*
 * Function to initialize and return an array of zeros for each measure in existence, to be used as an array of flags
 * Takes in an array size
 */
 ~getZeroFlagArray = { arg arrSize;
-	var outArray = List.new(3);
+	var outArray = List.new(arrSize);
 	arrSize.do({outArray.add(0)});
 	outArray;
 };
@@ -574,6 +548,46 @@ w.front;
 ~getRepeatsDividers.value(~testArray).postln;
 ~flagArray.postln;
 
+/*
+* From a list of dividers and a flagarray, determine the motif array.
+*/
+~determineMotifs = { arg divs, flags;
+	var curr = 0;
+	var out = Array.new(divs.size + 1);
+	if(flags.size > 0, {
+		for(0,divs.size - 1, {arg i;
+			out = out.add(flags[divs[i]]);
+		});
+	});
+	out;
+};
+
+/*
+* From the dictionary of (ID -> [start, end]) and the parsed MIDI, build the dictionary of durations and of motifs
+*/
+~noteDurDictionaries = {arg melIndex, map;
+	var noteDur = ~extractLine.(~globalOutputArray, melIndex);
+	var id = 1;
+	var currRange;
+	var notes = Dictionary.new(map.size);
+	var durs = Dictionary.new(map.size);
+	while({map.at(id) != nil}, {
+		currRanges = map.at(id);
+		for(0,currRanges.size - 1, {arg i;
+			notes.put(id, []);
+			durs.put(id, []);
+			for(currRanges[i][0], currRanges[i][1], {arg j;
+				notes.put(id, notes.at(id) ++ noteDur[0][j]);
+				durs.put(id, durs.at(id) ++ noteDur[1][j]);
+			});
+		});
+		id = id + 1;
+	});
+	[notes,durs];
+};
+
+// ~determineMotifs.([0,3,6,8,11,14],[1,1,1,1,1,1,2,2,1,1,1,3,3,3,2,2]);
+
 
 /*
 * Generate the dictionary representing a cellular automata rule based on the number
@@ -653,8 +667,6 @@ w.front;
 	});
 	minRule;
 };
-
-///////////// The following is to be used after Kat's code to isolate motifs
 
 /*
 * Generate random durations to fit a certain number of beats, given an input set of durations
@@ -780,34 +792,6 @@ w.front;
 
 // ~markhovMotif.([1,2,1,1,3,1,2,5,1,4], 10).postln;
 
-///////////// The following is a possible simple way to generate harmony notes above the track
-// It requires scale degrees instead of just notes
-
-// Seed for chord randomizer which is also random.
-/*~chordRandSeed = rrand(0,5) / 10;
-
-/*
-* Generates the string of notes at the scale degree 'above' above the base, with a random chance of not including each note and including a rest instead.
-Will be used to write the lines with the other chordal notes in each melody.
-* Source: Robert Tung Midterm Project
-*/
-~chordRandomizer = {arg degrees, above, randSeed;
-	var chordNotes = Array.new(degrees.size);
-	var randomVal = 0;
-
-	for(0, degrees.size - 1, {arg i;
-		randomVal = [0,1].wchoose([randSeed,1 - randSeed]); // Random chance of including note.
-		if(randomVal == 0, {
-			// Include chord note.
-			chordNotes.add((degrees[i] + above));
-		}, {
-			// Include rest instead.
-			chordNotes.add(\rest);
-		});
-	});
-	chordNotes;
-};*/
-
 /*
 * Given a melody line and a harmony line, determine what harmony note was playing when this melody note played.
 */
@@ -880,30 +864,13 @@ Returns as [notes, durations]
 };
 
 /*
-* Grab the harmony from the output of the MIDI, which is in an array of measures, each in an array of arrays, each containing [voice, pitch, duration]
-*/
-~extractHarmonyLine = {arg input, voice;
-	var notes = [];
-	var durations = [];
-	for(0, input.size - 1, {arg i;
-		for(0,input[i].size - 1, {arg j;
-			if(input[i][j][0] == voice, {
-				notes = notes ++ input[i][j][1];
-				notes = notes ++ input[i][j][2];
-			});
-		});
-	});
-	[notes, durations];
-};
-
-/*
 INSTRUCTIONS: How everything works together:
 
 After running xml_read portion of code, ~globalOutputArray has the song
 
-Assuming the harmony voice is number 2, to get the harmony, call ~oldHarm = ~extractHarmonyLine.(~globalOutputArray, 2);
+Assuming the harmony voice is number 2, to get the harmony, call ~oldHarm = ~extractLine.(~globalOutputArray, 2);
 
-Kat's code turns the ~globalOutputArray into a duration dictionary (ID -> array of durations for each motif), a note dictionary (ID -> array of notes for each motif), and an array of motifs.
+Kat's code turns the ~globalOutputArray into a duration dictionary (ID -> array of durations for each motif), a note dictionary (ID -> array of notes for each motif), and an array of motifs (call ~determineMotifs on divs and flags). The dictionaries are found by calling ~noteDurDictionaries on the melody index (if the melody is voice 1 in ~globalOutputArray then this is 1), and ~globalOutputArray.
 
 Call ~convertToLine on this output, lets say stored into ~oldMel
 
