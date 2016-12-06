@@ -166,7 +166,7 @@ var rest, pitch, dot, instrument_ID, measure_number, midiNote, duration;
 // > > > > > INSERT .XML FILE HERE < < < < < \\
 //                     "~/path/fileName"                       \\
 ~longString = ~makeLongStringFromXML.value(
-	("~/Desktop/CS431_final_project/"++~fileName));
+	("~/Desktop/CPSC-431-Final-Project/"++~fileName));
 //    > > > > > > > > ><  < < < < < < < < <   \\
 
 
