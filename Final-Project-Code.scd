@@ -742,7 +742,7 @@ INSTRUCTIONS: How everything works together:
 
 After running xml_read portion of code, ~globalOutputArray has the song
 
-Assuming the harmony voice is number 1, to get the harmony, call ~oldHarm = ~extractHarmonyLine.(~globalOutputArray, 1);
+Assuming the harmony voice is number 2, to get the harmony, call ~oldHarm = ~extractHarmonyLine.(~globalOutputArray, 2);
 
 Kat's code turns the ~globalOutputArray into a duration dictionary (ID -> array of durations for each motif), a note dictionary (ID -> array of notes for each motif), and an array of motifs.
 
@@ -750,8 +750,8 @@ Call ~convertToLine on this output, lets say stored into ~oldMel
 
 After this, use the following lines to get the output melody notes and durations:
 ~durs = ~durationGenerate.(oldMel[1}); // durations for melody and harmony
-~harm = ~writeHarmonyLine.(~oldMel[0], ~oldMel[1], ~oldHarm[0], ~oldHarm[1], ~mel); // notes for harmony
 ~mel = ~markhovMotif.(~oldMel[0], ~durs.size); // notes for melody
+~harm = ~writeHarmonyLine.(~oldMel[0], ~oldMel[1], ~oldHarm[0], ~oldHarm[1], ~mel); // notes for harmony
 
 Given that we currently don't take drums as input, drums can be generated just with: (where size is the length of the output you want)
 
