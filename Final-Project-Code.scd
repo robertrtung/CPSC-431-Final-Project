@@ -388,6 +388,23 @@ w.front;
 (
 
 /*
+* Grab the harmony from the output of the MIDI, which is in an array of measures, each in an array of arrays, each containing [voice, pitch, duration]
+*/
+~extractLine = {arg input, voice;
+	var notes = [];
+	var durations = [];
+	for(0, input.size - 1, {arg i;
+		for(0,input[i].size - 1, {arg j;
+			if(input[i][j][0] == voice, {
+				notes = notes ++ input[i][j][1];
+				notes = notes ++ input[i][j][2];
+			});
+		});
+	});
+	[notes, durations];
+};
+
+/*
 * Function to initialize and return an array of zeros for each measure in existence, to be used as an array of flags
 * Takes in an array size
 */
@@ -535,6 +552,30 @@ w.front;
 		});
 	});
 	out;
+};
+
+/*
+* From the dictionary of (ID -> [start, end]) and the parsed MIDI, build the dictionary of durations and of motifs
+*/
+~noteDurDictionaries = {arg melIndex, map;
+	var noteDur = ~extractLine.(~globalOutputArray, melIndex);
+	var id = 1;
+	var currRange;
+	var notes = Dictionary.new(map.size);
+	var durs = Dictionary.new(map.size);
+	while({map.at(id) != nil}, {
+		currRanges = map.at(id);
+		for(0,currRanges.size - 1, {arg i;
+			notes.put(id, []);
+			durs.put(id, []);
+			for(currRanges[i][0], currRanges[i][1], {arg j;
+				notes.put(id, notes.at(id) ++ noteDur[0][j]);
+				durs.put(id, durs.at(id) ++ noteDur[1][j]);
+			});
+		});
+		id = id + 1;
+	});
+	[notes,durs];
 };
 
 // ~determineMotifs.([0,3,6,8,11,14],[1,1,1,1,1,1,2,2,1,1,1,3,3,3,2,2]);
@@ -815,30 +856,13 @@ Returns as [notes, durations]
 };
 
 /*
-* Grab the harmony from the output of the MIDI, which is in an array of measures, each in an array of arrays, each containing [voice, pitch, duration]
-*/
-~extractHarmonyLine = {arg input, voice;
-	var notes = [];
-	var durations = [];
-	for(0, input.size - 1, {arg i;
-		for(0,input[i].size - 1, {arg j;
-			if(input[i][j][0] == voice, {
-				notes = notes ++ input[i][j][1];
-				notes = notes ++ input[i][j][2];
-			});
-		});
-	});
-	[notes, durations];
-};
-
-/*
 INSTRUCTIONS: How everything works together:
 
 After running xml_read portion of code, ~globalOutputArray has the song
 
-Assuming the harmony voice is number 2, to get the harmony, call ~oldHarm = ~extractHarmonyLine.(~globalOutputArray, 2);
+Assuming the harmony voice is number 2, to get the harmony, call ~oldHarm = ~extractLine.(~globalOutputArray, 2);
 
-Kat's code turns the ~globalOutputArray into a duration dictionary (ID -> array of durations for each motif), a note dictionary (ID -> array of notes for each motif), and an array of motifs.
+Kat's code turns the ~globalOutputArray into a duration dictionary (ID -> array of durations for each motif), a note dictionary (ID -> array of notes for each motif), and an array of motifs (call ~determinMotifs on divs and flags).
 
 Call ~convertToLine on this output, lets say stored into ~oldMel
 
