@@ -591,8 +591,6 @@
 ~cellularAutomataArray = {arg size, rules;
 	var arr = Array.fill(size, {Array.fill(size, {0})}); // create an array full of 0s
 	arr[0].put(size / 2, 1);
-	rules.postln;
-	rules.at('[,1,1]'.asSymbol).postln;
 
 	// Code in the loop below taken from Professor Petersen's notes
 	arr.do {|row, index|
@@ -644,15 +642,21 @@
 ~findClosestDrumRule = { arg drums;
 	var minDiff = drums.size + 1; // minimum difference between drums and rule found so far
 	var minRule = 1; // closest rule to output
+	var diff;
 
 	// loop through rules and find the closest rule
 	for(1,255, {arg i;
-		if((drums-~getDrumColumn.(drums.size / 2, drums.size, ~generateDrumRule.(i))).sum < minDiff, {
+		diff = (drums-~getDrumColumn.(drums.size / 2, drums.size, ~generateDrumRule.(i))).abs.sum;
+		diff.postln;
+		if(diff < minDiff, {
 			minRule = i;
+			minDiff = diff;
 		});
 	});
 	minRule;
 };
+
+// ~findClosestDrumRule.([1,0,0,0,1,1,1,1,0,1,0]);
 
 /*
 * Generate random durations to fit a certain number of beats, given an input set of durations
