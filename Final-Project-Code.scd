@@ -1,6 +1,9 @@
+(
 ~melodyDict = Dictionary.new();
 ~motifCount = 1;
 ~flagArray;
+~motifDict = Dictionary.new();
+~testArray = [[1, 2], [3, 1], [4, 5], [0], [1, 2], [3, 1], [4, 5]];
 
 /*
 * Generate the dictionary used for Markhov models on a set of notes
@@ -10,11 +13,11 @@
 	~melodyDict = Dictionary.new(notes.size);
 	for(0, notes.size-2, {arg i;
 		if(~melodyDict.at(notes[i]) == Nil, {
-			~melodyDist.put(notes[i], [notes[i+1]]);
+			~melodyDict.put(notes[i], [notes[i+1]]);
 		}, {
-			temp = ~melodyDist.at(notes[i]);
+			temp = ~melodyDict.at(notes[i]);
 			temp = temp ++ [notes[i+1]];
-			~melodyDist.put(notes[i], temp);
+			~melodyDict.put(notes[i], temp);
 		});
 	});
 };
@@ -54,18 +57,26 @@
 };
 
 // Test the function above
-~getZeroFlagArray.value(6).postln;
+~getZeroFlagArray.value(6);
 
 // Check that the measures following the matched ones are not yet marked
-~checkNextMeasures = { arg measuresArr, matches;
-	var bool = True;
+// Also check that they all match the measure following currentIndex
+~checkNextMeasures = { arg currentIndex, measuresArr, matches;
+	var bool = true;
 	matches.do({|measureIndex|
 		if ((measureIndex + 1) >= measuresArr.size,
 			// We can't continue because we've run off of the end of the array
-			{bool = False},
-			{if (measuresArr[measureIndex + 1] != 0,
+			{bool = false},
+			{measuresArr[measureIndex + 1];
+				measuresArr[currentIndex + 1];
+
+				if ((~flagArray[measureIndex + 1] != 0) ||
+				(measuresArr[measureIndex + 1] != measuresArr[currentIndex + 1]),
 				// We can't continue because the next measure is marked as non-zero
-				{bool = False}
+				// or the next measure doesn't match the one at currentIndex + 1
+				{measuresArr[measureIndex + 1];
+				measuresArr[currentIndex + 1];
+						bool = false;}
 			);}
 		);
 	});
@@ -87,52 +98,48 @@
 */
 ~getRepeatSectionDividers = { arg measuresArr, measureIndex, rawMatches;
 	var currentIndex = measureIndex;
+	var matches = List.copyInstance(rawMatches);
 	var newDividers = List[];
 
 	// Set the flags for the motif
 	~flagArray[measureIndex] = ~motifCount;
-	matches.do(|measureIndex| { ~flagArray[measureIndex] = ~motifCount});
+	matches.do({|measIndex| ~flagArray[measIndex] = ~motifCount;});
 
 	// Make sure we don't run into a marked section and don't run off the end of the array
 	while ({(~flagArray[currentIndex + 1] == 0) &&
-		~checkNextMeasures.value(measuresArr, matches)},
-
+		(~checkNextMeasures.value(currentIndex, measuresArr, matches) == true)},
 		// Increment the currentIndex as well as the matches indicies because
 		// we know they're safe
-		currentIndex = currentIndex + 1;
+		{currentIndex = (currentIndex + 1);
 		matches = ~incrementMatches.value(matches);
 
 		// Set the flags for the motif
 		~flagArray[currentIndex] = ~motifCount;
-		matches.do(|currentIndex| { ~flagArray[measureIndex] = ~motifCount});
+		matches.do({|currIndex| ~flagArray[currIndex] = ~motifCount;});
+	});
 
-
-
-
-
-
-		{if (measuresArr[currentIndex] == measuresArr[currentRepeatIndex],
-			// Measures still match, so continue
-			{currentIndex++; currentRepeatIndex++;}
-			// Else, break because the measures don't match anymore
-			{breakFlag = 1;});
-		}
-	);
-	newDividers = [measureIndex, currentIndex, repeatMeasureIndex, currentRepeatIndex];
+	newDividers = (rawMatches ++ (matches + 1)).add(measureIndex).add(currentIndex + 1);
+	newDividers;
 };
+
+// Testing code
+/*~flagArray = ~getZeroFlagArray.value(~testArray.size);
+~getRepeatSectionDividers.value(~testArray, 0, List[3]);
+~flagArray;*/
 
 
 /*
 * Function to find any sequence of repeats in the song to break up the song into sections
 * takes in a list of lists of notes grouped by measure
-* returns
+* returns a list of section dividers
 */
-~getRepeats = { arg measuresArr;
-	var out = List[];
+~getRepeatsDividers = { arg measuresArr;
 	var dividers = List[0];
 	var measureIndex = 0;
 	var matches = List[];
 	var dividersToAdd;
+	var motifStart;
+	var motifEnd;
 	~flagArray = ~getZeroFlagArray.value(measuresArr.size);
 
 	// Go through notes and find any sequences that are equal
@@ -141,38 +148,40 @@
 		// Go through all measures following the current one to see if any match
 		{ for (measureIndex + 1, measuresArr.size - 1, { |i|
 			if ((measuresArr[measureIndex] == measuresArr[i]) &&
-				(flagArray[measuresIndex] == 0) && (flagArray[i] == 0 ),
+				(~flagArray[measureIndex] == 0) && (~flagArray[i] == 0 ),
 				// Found a match so add to the matches list
 				{matches.add(i)}
 			);
 		});
 
 		// Get the dividers for the sections
-		dividersToAdd = ~getRepeatedSectionDividers.value(measuresArr, measureIndex,
+		dividersToAdd = ~getRepeatSectionDividers.value(measuresArr, measureIndex,
 			matches);
+		motifStart = dividersToAdd[dividersToAdd.size - 2];
+		motifEnd = dividersToAdd[dividersToAdd.size - 1]; // equivalent to the start of the next section
 
+		// Add the motif to the motif dictionary and increment the motif count
+		// The bounds of the motif are [motifStart, motifEnd)
+		~motifDict.put(~motifCount, [motifStart, motifEnd]);
+		~motifCount = ~motifCount + 1;
 
-		/////
+		// Add any dividers that have not yet been added
+		dividersToAdd.do({ arg divider;
+			if ((dividers.includes(divider) == false) && (divider < measuresArr.size),
+				{dividers.add(divider)});
+		});
+
 		// Move to the end of the repeated section
-		measureIndex = measuresArr[1];
+		measureIndex = motifEnd.postln;
+		}
+	);
 
+	dividers.sort;
+};
 
-
-					////////////
-				dividersToAdd.do{ |elt| }
-
-				{ if (!dividers.includes(measureIndex), {dividers.add(measureIndex)});
-					if (!dividers.includes(i), {dividers.add(i)});
-					measureCount
-
-				}
-				dividers.add(measureIndex)
-		)
-	out;
-}
-
-
-
+~getRepeatsDividers.value(~testArray).postln;
+~flagArray;
+)
 
 * Generate the dictionary representing a cellular automata rule based on the number
 */
