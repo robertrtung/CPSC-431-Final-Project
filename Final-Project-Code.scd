@@ -673,7 +673,7 @@ Will be used to write the lines with the other chordal notes in each melody.
 	dursUntil.postln;
 
 	if(found == 0, {
-		out = note + 12;
+		out = note - 12;
 	}, {
 		for(0, harmNotes.size-1, {arg i;
 			if(harmFound == 0, {
@@ -687,7 +687,7 @@ Will be used to write the lines with the other chordal notes in each melody.
 	});
 
 	if(harmFound == 0, {
-		out = note + 12;
+		out = note - 12;
 	});
 
 	out;
