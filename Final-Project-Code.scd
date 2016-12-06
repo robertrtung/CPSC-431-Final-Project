@@ -720,5 +720,43 @@ Returns as [notes, durations]
 	out;
 };
 
+/*
+* Grab the harmony from the output of the MIDI, which is in an array of measures, each in an array of arrays, each containing [voice, pitch, duration]
+*/
+~extractHarmonyLine = {arg input, voice;
+	var notes = [];
+	var durations = [];
+	for(0, input.size - 1, {arg i;
+		for(0,input[i].size - 1, {arg j;
+			if(input[i][j][0] == voice, {
+				notes = notes ++ input[i][j][1];
+				notes = notes ++ input[i][j][2];
+			});
+		});
+	});
+	[notes, durations];
+};
+
+/*
+INSTRUCTIONS: How everything works together:
+
+After running xml_read portion of code, ~globalOutputArray has the song
+
+Assuming the harmony voice is number 1, to get the harmony, call ~oldHarm = ~extractHarmonyLine.(~globalOutputArray, 1);
+
+Kat's code turns the ~globalOutputArray into a duration dictionary (ID -> array of durations for each motif), a note dictionary (ID -> array of notes for each motif), and an array of motifs.
+
+Call ~convertToLine on this output, lets say stored into ~oldMel
+
+After this, use the following lines to get the output melody notes and durations:
+~durs = ~durationGenerate.(oldMel[1}); // durations for melody and harmony
+~harm = ~writeHarmonyLine.(~oldMel[0], ~oldMel[1], ~oldHarm[0], ~oldHarm[1], ~mel); // notes for harmony
+~mel = ~markhovMotif.(~oldMel[0], ~durs.size); // notes for melody
+
+Given that we currently don't take drums as input, drums can be generated just with: (where size is the length of the output you want)
+
+~getDrumColumn.(size / 2, size, ~generateDrumRule.(255.rand)); // drum beats (an array of 0's and 1's where 0's are silences and 1's are drum hits)
+*/
+
 )
 )
