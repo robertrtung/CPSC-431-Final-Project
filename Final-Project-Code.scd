@@ -2,7 +2,7 @@
 ~motifCount = 1;
 ~flagArray;
 ~motifDict = Dictionary.new();
-~testArray = [[1, 2], [3, 1], [4, 5], [0], [1, 2], [3, 1], [4, 5]];
+~testArray = [[1, 2], [3, 1], [4, 5], [1, 2], [3, 1], [0], [1, 2], [3, 1], [4, 5]];
 (
 //  CHOOSE THE FILE TO READ \\
 ~fileNameArray = ["mario_theme.xml", "traumerei.xml", "marry_you.xml"];
@@ -441,7 +441,7 @@ w.front;
 };
 
 // Test the function above
-~getZeroFlagArray.value(6);
+/*~getZeroFlagArray.value(6);*/
 
 // Check that the measures following the matched ones are not yet marked
 // Also check that they all match the measure following currentIndex
@@ -475,6 +475,8 @@ w.front;
 	matches;
 };
 
+~incrementMatches.value([1, 2, 3]).postln;
+
 /*
 * Function to find the dividing measures for many repeat sections
 * takes in the array of measures, the index of the first repeated measure, and an array of matches to that measure
@@ -498,7 +500,7 @@ w.front;
 		matches = ~incrementMatches.value(matches);
 
 		// Set the flags for the motif
-		~flagArray[currentIndex] = ~motifCount;
+		~flagArray[currentIndex] = ~motifCount.postln;
 		matches.do({|currIndex| ~flagArray[currIndex] = ~motifCount;});
 	});
 
@@ -507,9 +509,9 @@ w.front;
 };
 
 // Testing code
-/*~flagArray = ~getZeroFlagArray.value(~testArray.size);
+~flagArray = ~getZeroFlagArray.value(~testArray.size);
 ~getRepeatSectionDividers.value(~testArray, 0, List[3]);
-~flagArray;*/
+~flagArray;
 
 
 /*
@@ -528,43 +530,49 @@ w.front;
 
 	// Go through notes and find any sequences that are equal
 	while ( {measureIndex < measuresArr.size}, // for each measure
+		// Check that the measure has not been assigned to a motif yet
+		{ if (~flagArray[measureIndex] == 0,
+			// Go through all measures following the current one to see if any match
+			{
+				for (measureIndex + 1, measuresArr.size - 1, { |i|
+					if ((measuresArr[measureIndex] == measuresArr[i]) &&
+						(~flagArray[measureIndex] == 0) && (~flagArray[i] == 0 ),
+						// Found a match so add to the matches list
+						{matches.add(i)}
+					);
+				});
 
-		// Go through all measures following the current one to see if any match
-		{ for (measureIndex + 1, measuresArr.size - 1, { |i|
-			if ((measuresArr[measureIndex] == measuresArr[i]) &&
-				(~flagArray[measureIndex] == 0) && (~flagArray[i] == 0 ),
-				// Found a match so add to the matches list
-				{matches.add(i)}
-			);
-		});
+				// Get the dividers for the sections
+				dividersToAdd = ~getRepeatSectionDividers.value(measuresArr,
+					measureIndex, matches);
+				motifStart = dividersToAdd[dividersToAdd.size - 2];
+				motifEnd = dividersToAdd[dividersToAdd.size - 1]; // equivalent to the start of the next section
 
-		// Get the dividers for the sections
-		dividersToAdd = ~getRepeatSectionDividers.value(measuresArr, measureIndex,
-			matches);
-		motifStart = dividersToAdd[dividersToAdd.size - 2];
-		motifEnd = dividersToAdd[dividersToAdd.size - 1]; // equivalent to the start of the next section
+				// Add the motif to the motif dictionary and increment the motif count
+				// The bounds of the motif are [motifStart, motifEnd)
+				~motifDict.put(~motifCount, [motifStart, motifEnd]);
+				~motifCount = ~motifCount + 1;
 
-		// Add the motif to the motif dictionary and increment the motif count
-		// The bounds of the motif are [motifStart, motifEnd)
-		~motifDict.put(~motifCount, [motifStart, motifEnd]);
-		~motifCount = ~motifCount + 1;
+				// Add any dividers that have not yet been added
+				dividersToAdd.do({ arg divider;
+					if ((dividers.includes(divider) == false) && (divider < measuresArr.size),
+						{dividers.add(divider)});
+				});
 
-		// Add any dividers that have not yet been added
-		dividersToAdd.do({ arg divider;
-			if ((dividers.includes(divider) == false) && (divider < measuresArr.size),
-				{dividers.add(divider)});
-		});
+				// Move to the end of the repeated section
+				measureIndex = motifEnd.postln;
+				matches = List[];
+			},
+			{measureIndex = measureIndex + 1;}
+		);
 
-		// Move to the end of the repeated section
-		measureIndex = motifEnd.postln;
-		}
-	);
+	});
 
 	dividers.sort;
 };
 
 ~getRepeatsDividers.value(~testArray).postln;
-~flagArray;
+~flagArray.postln;
 
 
 /*
