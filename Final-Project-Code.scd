@@ -386,49 +386,6 @@ w.front;
 ///////////////////////////////////////
 
 (
-/*~melodyDict = Dictionary.new();
-
-/*
-* Generate the dictionary used for Markhov models on a set of notes
-*/
-~generateMelodyDict = { arg notes;
-	var temp;
-	~melodyDict = Dictionary.new(notes.size);
-	for(0, notes.size-2, {arg i;
-		if(~melodyDict.at(notes[i]) == Nil, {
-			~melodyDict.put(notes[i], [notes[i+1]]);
-		}, {
-			temp = ~melodyDict.at(notes[i]);
-			temp = temp ++ [notes[i+1]];
-			~melodyDict.put(notes[i], temp);
-		});
-	});
-	~melodyDict;
-};
-
-/*
-* Function nextNote takes in the last note and chooses the next note based on Markov probabilities based on
-* the given Frere Jacques segment
-*/
-~nextNote = { arg note;
-	~melodyDict.at(note).choose;
-};
-
-/*
-* Function generateNotes takes in the starting note for the measure and the number of notes in the measure;
-* returns a measure of notes in an array
-*  Source: Group B (our own group) project 1 source code
-*/
-~generateNotes = { arg startingNote, numNotes;
-	// Output
-	var out = Array.new(numNotes);
-	out.add(startingNote);
-
-	// Each note generated from the Markhov chain of the previous note
-	for(1, numNotes-1, {arg i; out = out.add(~nextNote.(out[i-1]))});
-
-	out;
-};*/
 
 /*
 * Function to initialize and return an array of zeros for each measure in existence, to be used as an array of flags
@@ -566,6 +523,22 @@ w.front;
 ~getRepeatsDividers.value(~testArray).postln;
 ~flagArray;
 
+/*
+* From a list of dividers and a flagarray, determine the motif array.
+*/
+~determineMotifs = { arg divs, flags;
+	var curr = 0;
+	var out = Array.new(divs.size + 1);
+	if(flags.size > 0, {
+		for(0,divs.size - 1, {arg i;
+			out = out.add(flags[divs[i]]);
+		});
+	});
+	out;
+};
+
+// ~determineMotifs.([0,3,6,8,11,14],[1,1,1,1,1,1,2,2,1,1,1,3,3,3,2,2]);
+
 
 /*
 * Generate the dictionary representing a cellular automata rule based on the number
@@ -645,8 +618,6 @@ w.front;
 	});
 	minRule;
 };
-
-///////////// The following is to be used after Kat's code to isolate motifs
 
 /*
 * Generate random durations to fit a certain number of beats, given an input set of durations
@@ -771,34 +742,6 @@ w.front;
 };
 
 // ~markhovMotif.([1,2,1,1,3,1,2,5,1,4], 10).postln;
-
-///////////// The following is a possible simple way to generate harmony notes above the track
-// It requires scale degrees instead of just notes
-
-// Seed for chord randomizer which is also random.
-/*~chordRandSeed = rrand(0,5) / 10;
-
-/*
-* Generates the string of notes at the scale degree 'above' above the base, with a random chance of not including each note and including a rest instead.
-Will be used to write the lines with the other chordal notes in each melody.
-* Source: Robert Tung Midterm Project
-*/
-~chordRandomizer = {arg degrees, above, randSeed;
-	var chordNotes = Array.new(degrees.size);
-	var randomVal = 0;
-
-	for(0, degrees.size - 1, {arg i;
-		randomVal = [0,1].wchoose([randSeed,1 - randSeed]); // Random chance of including note.
-		if(randomVal == 0, {
-			// Include chord note.
-			chordNotes.add((degrees[i] + above));
-		}, {
-			// Include rest instead.
-			chordNotes.add(\rest);
-		});
-	});
-	chordNotes;
-};*/
 
 /*
 * Given a melody line and a harmony line, determine what harmony note was playing when this melody note played.
