@@ -534,6 +534,38 @@
 ~flagArray.postln;
 ~motifDict.postln;
 
+/*Function to go through the flag array and update all consecutive 0s to reflect a new motif; also updates the ~motifDict as it goes*/
+~handleZeroFlags = {
+	var currentIndex = 0;
+	var currentMotifStart = 0;
+	~flagArray;
+	~motifDict;
+	~motifCount = ~motifCount + 1;
+	while ({ currentIndex < ~flagArray.size},
+		// Find the first instance of a zero and
+		{if ( ~flagArray[currentIndex] == 0,
+			// Set the starting point and go reassign all 0 flags immediately following until we hit a non-zero or the end of the array
+			{currentMotifStart = currentIndex;
+				while({ currentIndex < ~flagArray.size && ~flagArray[currentIndex] == 0},
+					{~flagArray[currentIndex] = ~motifCount;
+						currentIndex = currentIndex + 1;
+					}
+				);
+				// We've finished setting the flag array, so we need to set the dictionary
+				~motifDict.put(~motifCount, [currentMotifStart, currentIndex]);
+				~motifCount = ~motifCount + 1;
+			}
+		);
+		// Update the current Index
+		currentIndex = currentIndex + 1;
+	});
+};
+
+~handleZeroFlags.value();
+~flagArray.postln;
+~motifDict.postln;
+~motifCount.postln;
+
 /*
 * From a list of dividers and a flagarray, determine the motif array.
 */
@@ -857,6 +889,19 @@ After running xml_read portion of code, ~globalOutputArray has the song
 Assuming the harmony voice is number 2, to get the harmony, call ~oldHarm = ~extractLine.(~globalOutputArray, 2);
 
 Kat's code turns the ~globalOutputArray into a duration dictionary (ID -> array of durations for each motif), a note dictionary (ID -> array of notes for each motif), and an array of motifs (call ~determineMotifs on divs and flags). The dictionaries are found by calling ~noteDurDictionaries on the melody index (if the melody is voice 1 in ~globalOutputArray then this is 1), and ~globalOutputArray. (Use ~getRepeatsDividers to get the list of dividers. This function also creates a dictionary of ID-> array mappings as well as an array indicating what motifs each measure is associated with. From here, we may need to create dummy motifs out of the 0 flags in ~flagarray. The last element of the array may or may not be included in the dividers.)
+>>> need to use ~getRepeatsDividers to get the dividers and then ~handleZeroFlags to finish editing the ~flagArray and ~motifDict
+
+// Makes sure to initialize ~flagArray = List[] and ~motifDict = Dictionary.new() and ~motifCount = 1 before doing anything
+var motif_dividers = ~getRepeatsDividers.value(~extractLine.value(~globalOutputArray, 1));
+~handleZeroFlags.value(); // Makes sure not to forget this step
+
+// After the above, flags are in ~flagArray and motif dictionary is in ~motifDict
+// Robert's code----
+
+
+
+
+var durations_divide
 
 
 Call ~convertToLine on this output, lets say stored into ~oldMel
