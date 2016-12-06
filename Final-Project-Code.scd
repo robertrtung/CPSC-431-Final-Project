@@ -360,27 +360,6 @@
 		i = i + 1;
 	});
 };
-
-/*
-* GUI code adapted from that of Group D Project 1.
-*/
-w = Window.new("Group Mare Tranquillitatis GUI", Rect(200,200,400,150));
-b = Button.new(w,Rect(150,80,150,30)).states_([["Analyze and Play"]]);
-
-p = PopUpMenu(w, Rect(150, 30, 200, 20));
-p.items = [
-	"Choose which file", "Mario Theme", "Traumerei", "Marry You"
-];
-
-b.action = {
-	~fileName = ~fileNameArray[p.value-1];
-	~fileName.postln;
-	~analyze.value;
-};
-
-StaticText.new(w,Rect(50,30,60,20)).string_("File:  ");
-
-w.front;
 );
 
 ///////////////////////////////////////
@@ -891,6 +870,32 @@ Given that we currently don't take drums as input, drums can be generated just w
 
 ~getDrumColumn.(size / 2, size, ~generateDrumRule.(255.rand)); // drum beats (an array of 0's and 1's where 0's are silences and 1's are drum hits)
 */
+
+);
+
+(
+
+/*
+* GUI code adapted from that of Group D Project 1.
+*/
+w = Window.new("Group Mare Tranquillitatis GUI", Rect(200,200,400,150));
+b = Button.new(w,Rect(150,80,150,30)).states_([["Analyze and Play"]]);
+
+p = PopUpMenu(w, Rect(150, 30, 200, 20));
+p.items = [
+	"Choose which file", "Mario Theme", "Traumerei", "Marry You"
+];
+
+b.action = {
+	~fileName = ~fileNameArray[p.value-1];
+	~fileName.postln;
+	~analyze.value;
+	// when play function is written, this will call that function
+};
+
+StaticText.new(w,Rect(50,30,60,20)).string_("File:  ");
+
+w.front;
 
 )
 )
