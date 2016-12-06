@@ -591,8 +591,6 @@
 ~cellularAutomataArray = {arg size, rules;
 	var arr = Array.fill(size, {Array.fill(size, {0})}); // create an array full of 0s
 	arr[0].put(size / 2, 1);
-	rules.postln;
-	rules.at('[,1,1]'.asSymbol).postln;
 
 	// Code in the loop below taken from Professor Petersen's notes
 	arr.do {|row, index|
@@ -644,15 +642,21 @@
 ~findClosestDrumRule = { arg drums;
 	var minDiff = drums.size + 1; // minimum difference between drums and rule found so far
 	var minRule = 1; // closest rule to output
+	var diff;
 
 	// loop through rules and find the closest rule
 	for(1,255, {arg i;
-		if((drums-~getDrumColumn.(drums.size / 2, drums.size, ~generateDrumRule.(i))).sum < minDiff, {
+		diff = (drums-~getDrumColumn.(drums.size / 2, drums.size, ~generateDrumRule.(i))).abs.sum;
+		diff.postln;
+		if(diff < minDiff, {
 			minRule = i;
+			minDiff = diff;
 		});
 	});
 	minRule;
 };
+
+// ~findClosestDrumRule.([1,0,0,0,1,1,1,1,0,1,0]);
 
 /*
 * Generate random durations to fit a certain number of beats, given an input set of durations
@@ -838,7 +842,7 @@
 * Converts a dictionary of motif notes, a dictionary of motif durations, and an array of motif numbers into a new generated array of notes and durations
 Returns as [notes, durations]
 */
-~convertToLine = { arg durDict, noteDict, motifs;
+~convertToLine = { arg noteDict, durDict, motifs;
 	var out = Array.new(2);
 
 	var newDurDict = Dictionary(durDict.size);
@@ -881,6 +885,13 @@ After running xml_read portion of code, ~globalOutputArray has the song
 
 Assuming the harmony voice is number 2, to get the harmony, call ~oldHarm = ~extractLine.(~globalOutputArray, 2);
 
+// Makes sure to initialize ~flagArray = List[] and ~motifDict = Dictionary.new() and ~motifCount = 1 before doing anything
+var motif_dividers = ~getRepeatsDividers.value(~extractLine.value(~globalOutputArray, 1));
+~handleZeroFlags.value(); // Makes sure not to forget this step
+
+// After the above, flags are in ~flagArray and motif dictionary is in ~motifDict
+// Robert's code----
+
 Kat's code turns the ~globalOutputArray into a duration dictionary (ID -> array of durations for each motif), a note dictionary (ID -> array of notes for each motif), and an array of motifs (call ~determineMotifs on divs and flags). The dictionaries are found by calling ~noteDurDictionaries on the melody index (if the melody is voice 1 in ~globalOutputArray then this is 1), and ~globalOutputArray. (Use ~getRepeatsDividers to get the list of dividers. This function also creates a dictionary of ID-> array mappings as well as an array indicating what motifs each measure is associated with. From here, we may need to create dummy motifs out of the 0 flags in ~flagarray. The last element of the array may or may not be included in the dividers.)
 
 
@@ -894,6 +905,34 @@ After this, use the following lines to get the output melody notes and durations
 Given that we currently don't take drums as input, drums can be generated just with: (where size is the length of the output you want)
 
 ~getDrumColumn.(size / 2, size, ~generateDrumRule.(255.rand)); // drum beats (an array of 0's and 1's where 0's are silences and 1's are drum hits)
+*/
+
+/*
+PUT TOGETHER:
+// Kat's code to isolate motifs
+~flagArray = List[];
+~motifDict = Dictionary.new();
+~motifCount = 1;
+// TODO: FIX THIS ~motif_dividers = ~getRepeatsDividers.value(~extractLine.value(~globalOutputArray, 1));
+~handleZeroFlags.value(); // Makes sure not to forget this step
+
+// Get the dictionaries in the right format
+~dicts = ~noteDurDictionaries.(1, ~motifDict);
+
+// For generating dur, mel, and harm, pull old notes and rhythms
+~oldMelodyNotes =  ~extractLine.(~globalOutputArray, 1)[0];
+~oldMelodyRhythms =  ~extractLine.(~globalOutputArray, 1)[1];
+
+~oldHarmonyNotes =  ~extractLine.(~globalOutputArray, 2)[0];
+~oldHarmonyRhythms =  ~extractLine.(~globalOutputArray, 2)[1];
+
+~dursAndMel = ~convertToLine.(~dicts[0], ~dicts[1], ~determineMotifs.(~motif_dividers, ~flagArray));
+~durs = ~dursAndMel[0]; // durations for melody and harmony
+~mel = ~dursAndMel[1]; // notes for melody
+~harm = ~writeHarmonyLine.(~oldMelodyNotes, ~oldMelodyRhythms, ~oldHarmonyNotes, ~oldHarmonyRhythms, ~mel); // notes for harmony
+
+// Get drums
+~drums = ~getDrumColumn.(durs.sum / 2, durs.sum, ~generateDrumRule.(255.rand)); // drum beats (an array of 0's and 1's where 0's are silences and 1's are drum hits)
 */
 
 );
