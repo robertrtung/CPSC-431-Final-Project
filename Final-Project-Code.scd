@@ -372,11 +372,11 @@
 ~extractLine = {arg input, voice;
 	var notes = [];
 	var durations = [];
-	for(0, input.size - 1, {arg i;
+	for(0, input.size - 2, {arg i;
 		for(0,input[i].size - 1, {arg j;
 			if(input[i][j][0] == voice, {
-				notes = notes ++ input[i][j][1];
-				notes = notes ++ input[i][j][2];
+				notes = notes ++ [input[i][j][1]];
+				durations = durations ++ [input[i][j][2]];
 			});
 		});
 	});
@@ -835,16 +835,28 @@
 // ~writeHarmonyLine.([5,4,3,1,2], [1,2,3,4,5], [1,2,3,4,5], [5,4,3,2,1], [1,1,2,2,3,3,4,4,5,5]);
 
 /*
-* Converts a dictionary of motif notes, a dictionary of motif durations, and an array of motif numbers into an array of notes and durations
+* Converts a dictionary of motif notes, a dictionary of motif durations, and an array of motif numbers into a new generated array of notes and durations
 Returns as [notes, durations]
 */
 ~convertToLine = { arg durDict, noteDict, motifs;
 	var out = Array.new(2);
+
+	var newDurDict = Dictionary(durDict.size);
+	var newNoteDict = Dictionary(noteDict.size);
+	var currDur;
+
+	// Build dictionaries of new motifs
+	for(1,durDict.size, {arg i;
+		currDur = ~durationGenerate(durDict.at(i));
+		newDurDict.put(i, currDur);
+		newNoteDict.put(i,~markhovMotif.(noteDict.at(i), currDur.size));
+	});
 	out[0] = [];
 	out[1] = [];
+
 	for(0, motifs.size - 1, {
-		out[0] = out[0] ++ noteDict.at(motifs[i]);
-		out[1] = out[1] ++ durDict.at(motifs[i]);
+		out[0] = out[0] ++ newMoteDict.at(motifs[i]);
+		out[1] = out[1] ++ newDurDict.at(motifs[i]);
 	});
 	out;
 };
@@ -859,11 +871,11 @@ Assuming the harmony voice is number 2, to get the harmony, call ~oldHarm = ~ext
 Kat's code turns the ~globalOutputArray into a duration dictionary (ID -> array of durations for each motif), a note dictionary (ID -> array of notes for each motif), and an array of motifs (call ~determineMotifs on divs and flags). The dictionaries are found by calling ~noteDurDictionaries on the melody index (if the melody is voice 1 in ~globalOutputArray then this is 1), and ~globalOutputArray. (Use ~getRepeatsDividers to get the list of dividers. This function also creates a dictionary of ID-> array mappings as well as an array indicating what motifs each measure is associated with. From here, we may need to create dummy motifs out of the 0 flags in ~flagarray. The last element of the array may or may not be included in the dividers.)
 
 
-Call ~convertToLine on this output, lets say stored into ~oldMel
+Call ~convertToLine on this output, lets say stored into ~dursAndMel
 
 After this, use the following lines to get the output melody notes and durations:
-~durs = ~durationGenerate.(oldMel[1}); // durations for melody and harmony
-~mel = ~markhovMotif.(~oldMel[0], ~durs.size); // notes for melody
+~durs = ~dursAndMel[0]; // durations for melody and harmony
+~mel = ~dursAndMel[1]; // notes for melody
 ~harm = ~writeHarmonyLine.(~oldMel[0], ~oldMel[1], ~oldHarm[0], ~oldHarm[1], ~mel); // notes for harmony
 
 Given that we currently don't take drums as input, drums can be generated just with: (where size is the length of the output you want)
