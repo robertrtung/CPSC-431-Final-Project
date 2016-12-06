@@ -862,7 +862,7 @@ After running xml_read portion of code, ~globalOutputArray has the song
 
 Assuming the harmony voice is number 2, to get the harmony, call ~oldHarm = ~extractLine.(~globalOutputArray, 2);
 
-Kat's code turns the ~globalOutputArray into a duration dictionary (ID -> array of durations for each motif), a note dictionary (ID -> array of notes for each motif), and an array of motifs (call ~determinMotifs on divs and flags).
+Kat's code turns the ~globalOutputArray into a duration dictionary (ID -> array of durations for each motif), a note dictionary (ID -> array of notes for each motif), and an array of motifs (call ~determineMotifs on divs and flags). The dictionaries are found by calling ~noteDurDictionaries on the melody index (if the melody is voice 1 in ~globalOutputArray then this is 1), and ~globalOutputArray.
 
 Call ~convertToLine on this output, lets say stored into ~oldMel
 
