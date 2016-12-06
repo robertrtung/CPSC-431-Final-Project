@@ -5,7 +5,7 @@
 ~testArray = [[1, 2], [3, 1], [4, 5], [1, 2], [3, 1], [0], [0, 1], [0, 2], [0, 3], [1, 5], [1, 2], [3, 1], [4, 5], [1, 5], [1, 10], [4]];
 (
 //  CHOOSE THE FILE TO READ \\
-~fileNameArray = ["mario_theme.xml", "traumerei.xml", "marry_you.xml"];
+~fileNameArray = [ "xml_mario_theme.xml", "xml_pokemon_theme.xml", "xml_pokemon_battle.xml" ];
 ~fileName = ~fileNameArray[0];
 
 // ~globalOutputArray is the array you will use. it has MIDI note and duration
@@ -847,7 +847,7 @@ Returns as [notes, durations]
 
 	// Build dictionaries of new motifs
 	for(1,durDict.size, {arg i;
-		currDur = ~durationGenerate(durDict.at(i));
+		currDur = ~durationGenerate.(durDict.at(i));
 		newDurDict.put(i, currDur);
 		newNoteDict.put(i,~markhovMotif.(noteDict.at(i), currDur.size));
 	});
@@ -855,7 +855,7 @@ Returns as [notes, durations]
 	out[1] = [];
 
 	for(0, motifs.size - 1, {
-		out[0] = out[0] ++ newMoteDict.at(motifs[i]);
+		out[0] = out[0] ++ newNoteDict.at(motifs[i]);
 		out[1] = out[1] ++ newDurDict.at(motifs[i]);
 	});
 	out;
@@ -870,9 +870,9 @@ Returns as [notes, durations]
 
 // Kat's lines
 
-~durs = ~dursAndMel[0]; // durations for melody and harmony
+/*~durs = ~dursAndMel[0]; // durations for melody and harmony
 ~mel = ~dursAndMel[1]; // notes for melody
-~harm = ~writeHarmonyLine.(~oldMelodyNotes, ~oldMelodyRhythms, ~oldHarmonyNotes, ~oldHarmonyRhythms, ~mel); // notes for harmony
+~harm = ~writeHarmonyLine.(~oldMelodyNotes, ~oldMelodyRhythms, ~oldHarmonyNotes, ~oldHarmonyRhythms, ~mel); // notes for harmony*/
 
 /*
 INSTRUCTIONS: How everything works together:
@@ -908,7 +908,7 @@ b = Button.new(w,Rect(150,80,150,30)).states_([["Analyze and Play"]]);
 
 p = PopUpMenu(w, Rect(150, 30, 200, 20));
 p.items = [
-	"Choose which file", "Mario Theme", "Traumerei", "Marry You"
+	"Choose which file", "mario theme", "pokemon theme", "pokemon battle"
 ];
 
 b.action = {
