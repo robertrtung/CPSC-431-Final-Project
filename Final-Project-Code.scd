@@ -704,5 +704,21 @@ Will be used to write the lines with the other chordal notes in each melody.
 		out = out.add(~pullHarmonyNote.(melNodes,melDurs,harmNotes,harmDurs,newMel[i]));
 	});
 };
+
+/*
+* Converts a dictionary of motif notes, a dictionary of motif durations, and an array of motif numbers into an array of notes and durations
+Returns as [notes, durations]
+*/
+~convertToLine = { arg durDict, noteDict, motifs;
+	var out = Array.new(2);
+	out[0] = [];
+	out[1] = [];
+	for(0, motifs.size - 1, {
+		out[0] = out[0] ++ noteDict.at(motifs[i]);
+		out[1] = out[1] ++ durDict.at(motifs[i]);
+	});
+	out;
+};
+
 )
 )
