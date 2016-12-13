@@ -378,7 +378,7 @@ while ({i <= 240},{
 * GUI code adapted from that of Group D Project 1.
 */
 ~makeGUI = {
-	var menu_melSynth, menu_harmSynth, menu_track, menu_tempo,
+	var menu_melSynth, menu_harmSynth, menu_track, menu_version, menu_tempo,
 	button_print_preset, button_play, text_choose_synths, text_presets,
 	button_preset1, button_preset2, button_preset3, button_preset4,
 	param_1m, param_2m, param_3m, param_4m,
@@ -445,6 +445,15 @@ while ({i <= 240},{
 		~afterTrackSelected.value;
 	};
 
+    menu_version = PopUpMenu(w, Rect(425, 125, 150, 20));
+	menu_version.items = [
+		"Choose version", "Original version", "New version"
+	];
+	menu_version.background = Color.red;
+	menu_version.action = {
+// TODO: fill out action on new vs old version
+	};
+
 	menu_tempo = PopUpMenu(w, Rect(450, 200, 100, 20));
 	menu_tempo.items = ~tempoStringArray.asArray;
 	menu_tempo.background = Color.red;
@@ -463,9 +472,13 @@ while ({i <= 240},{
 		if (menu_track.value == 0, {
 			"PLEASE SELECT A TRACK".postln;
 		},{
-			~playMelody.play;
-			~playHarmony.play;
-			~playDrums.play;
+			if (menu_version.value == 0, {
+				"PLEASE SELECT A VERSION".postln;
+			},{
+				~playMelody.play;
+				~playHarmony.play;
+				~playDrums.play;
+			});
 		});
 
 	};
@@ -501,7 +514,7 @@ while ({i <= 240},{
 
 	// - - - - - - - - - - SLIDERS AND TEXT - - - - - - - - - - \\
 
-	// - - - MELODY PARAMATER 1 - - - \\
+	// - - - MELODY PARAMETER 1 - - - \\
 	param_1m = Slider(w, Rect(10, 150, 180, 20))
 	.action_({
 		z = param_1m.value;
@@ -513,7 +526,7 @@ while ({i <= 240},{
 	q = StaticText.new(w,Rect(15,175,170,20));
 	q.background = Color(1, 1, 1, 0.5);
 
-	// - - - MELODY PARAMATER 2 - - - \\
+	// - - - MELODY PARAMETER 2 - - - \\
 	param_2m = Slider(w, Rect(10, 200, 180, 20))
 	.action_({
 		z = param_2m.value;
@@ -525,7 +538,7 @@ while ({i <= 240},{
 	r = StaticText.new(w,Rect(15,225,170,20));
 	r.background = Color(1, 1, 1, 0.5);
 
-	// - - - MELODY PARAMATER 3 - - - \\
+	// - - - MELODY PARAMETER 3 - - - \\
 	param_3m = Slider(w, Rect(10, 250, 180, 20))
 	.action_({
 		z = param_3m.value;
@@ -536,7 +549,7 @@ while ({i <= 240},{
 	s = StaticText.new(w,Rect(15,275,170,20));
 	s.background = Color(1, 1, 1, 0.5);
 
-	// - - - MELODY PARAMATER 4 - - - \\
+	// - - - MELODY PARAMETER 4 - - - \\
 
 	param_4m = Slider(w, Rect(10, 300, 180, 20))
 	.action_({
@@ -550,7 +563,7 @@ while ({i <= 240},{
 	t.background = Color(1, 1, 1, 0.5);
 
 
-	// - - - HARMONY PARAMATER 1 - - - \\
+	// - - - HARMONY PARAMETER 1 - - - \\
 	param_1h = Slider(w, Rect(210, 150, 180, 20))
 	.action_({
 		z = param_1h.value;
@@ -774,7 +787,7 @@ while ({i <= 240},{
 		matches = ~incrementMatches.value(matches);
 
 		// Set the flags for the motif
-		~flagArray[currentIndex] = ~motifCount.postln;
+		~flagArray[currentIndex] = ~motifCount;
 		matches.do({|currIndex| ~flagArray[currIndex] = ~motifCount;});
 	});
 
@@ -782,7 +795,7 @@ while ({i <= 240},{
 	newDividers;
 };
 
-// Testing code
+// Testing code--make sure to keep commented if testing the real thing
 // ~flagArray = ~getZeroFlagArray.value(~testArray.size);
 // ~getRepeatSectionDividers.value(~testArray, 0, List[3]);
 // ~flagArray;
@@ -851,8 +864,10 @@ while ({i <= 240},{
 	dividers.sort;
 };
 
-// Test the ~getRepeatsDividers function on a test array
-/*~getRepeatsDividers.value(~testArray).postln;
+// Test the ~getRepeatsDividers function on a test array--make sure to keep commented or
+// delete if running the real thing!
+/*~motifCount = 1;
+~getRepeatsDividers.value(~testArray).postln;
 ~flagArray.postln;
 ~motifDict.postln;*/
 
@@ -862,7 +877,7 @@ while ({i <= 240},{
 	var currentMotifStart = 0;
 	~flagArray;
 	~motifDict;
-	~motifCount = ~motifCount + 1;
+	~motifCount;
 	while ({ currentIndex < ~flagArray.size},
 		// Find the first instance of a zero and
 		{if ( ~flagArray[currentIndex] == 0,
@@ -883,10 +898,11 @@ while ({i <= 240},{
 	});
 };
 
-~handleZeroFlags.value();
+// Test the function above--make sure to keep commented if running the real thing!
+/*~handleZeroFlags.value();
 ~flagArray.postln;
 ~motifDict.postln;
-~motifCount.postln;
+~motifCount.postln;*/
 
 /*
 * From a list of dividers and a flagarray, determine the motif array.
@@ -903,12 +919,8 @@ while ({i <= 240},{
 };
 
 /*
-* From the dictionary of (ID -> [start, end]) and the parsed MIDI, build the dictionary of durations and of motifs
+* From the dictionary of (ID -> [start, end)) and the parsed MIDI, build the dictionary of durations and of motifs
 */
-
-
-
-
 ~noteDurDictionaries = {arg melIndex, map;
 
 	var noteDur = ~extractLine.(~globalOutputArray, melIndex);
@@ -916,16 +928,20 @@ while ({i <= 240},{
 	var currRanges;
 	var notes = Dictionary.new(map.size);
 	var durs = Dictionary.new(map.size);
+
+	// Go through all ids in the dictionary
 	while({map.at(id) != nil}, {
 		currRanges = map.at(id);
-		for(0,currRanges.size - 1, {arg i;
-			notes.put(id, []);
-			durs.put(id, []);
-			for(currRanges[i][0], currRanges[i][1], {arg j;
-				notes.put(id, notes.at(id) ++ noteDur[0][j]);
-				durs.put(id, durs.at(id) ++ noteDur[1][j]);
-			});
+		notes.put(id, []);
+		durs.put(id, []);
+
+		// Go through the range of the given id and add the note or duration from
+		// noteDur to the respective dictionaries for the id
+		for(currRanges[0], currRanges[1] - 1, {arg i;
+			notes.put(id, notes.at(id) ++ noteDur[0][i]);
+			durs.put(id, durs.at(id) ++ noteDur[1][i]);
 		});
+		// Increment id for the while loop
 		id = id + 1;
 	});
 	[notes,durs];
@@ -1199,9 +1215,10 @@ Returns as [notes, durations]
 */
 ~convertToLine = { arg durDict, noteDict, motifs;
 	var out = Array.new(2);
-	out[0] = [];
-	out[1] = [];
-	for(0, motifs.size - 1, {
+	out.add([]);
+	out.add([]);
+	// Go through all the elements of the motifs array
+	for(0, motifs.size - 1, {|i|
 		out[0] = out[0] ++ noteDict.at(motifs[i]);
 		out[1] = out[1] ++ durDict.at(motifs[i]);
 	});
@@ -1576,16 +1593,38 @@ Returns as [notes, durations]
 	).play;*/
 
 };
+
+
 /*
+* Function that gets the notes and durations for the new melody, returns as array of
+* [notes, durations]
+*/
 ~getNewMelody = {
-	var dividers;
 	var formattedNotes;
+	var dividers;
+	var motifArray;
+	var noteDurDict;
+
 	// Get the melody notes properly formatted and grouped by measure
 	formattedNotes = ~extractLineMeasureNotes.value(~globalOutputArray, 1);
-	~getRepeatsDividers.value(formattedNotes);
+
+	// Get the dividers and the properly set ~flagArray
+	dividers = ~getRepeatsDividers.value(formattedNotes);
 	~handleZeroFlags.value;
-	~convertToLine.value(~motifDict, ~flagArray)
-}*/
+	// Array that has information about order of motifs
+	motifArray = ~determineMotifs.value(dividers, ~flagArray);
+	// Get the note and duration dictionaries
+	noteDurDict = ~noteDurDictionaries.value(1, ~motifDict);
+
+	// Finally, convert a dictionary of motif durations (at noteDurDict[1]),
+	// a dictionary of motif notes (at noteDurDict[0]), and
+	// an array of motif numbers into an array of notes and durations
+	~convertToLine.value(noteDurDict[1], noteDurDict[0], motifArray);
+
+};
+
+// Test the function above
+~getNewMelody.value();
 
 /*
 INSTRUCTIONS: How everything works together:
