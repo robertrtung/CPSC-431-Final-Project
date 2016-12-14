@@ -1676,6 +1676,13 @@ After this, use the following lines to get the output melody notes and durations
 ~mel = ~markhovMotif.(~oldMel[0], ~durs.size); // notes for melody
 ~harm = ~writeHarmonyLine.(~oldMel[0], ~oldMel[1], ~oldHarm[0], ~oldHarm[1], ~mel); // notes for harmony
 
+~harmDurs = ~durs;
+
+// **NEW: to write a varied harmony, have the UI take a number between 0 and 1 (set it to ~seed) and then do ~harmDurs = ~randomizeDurations.(~seed, ~harmDurs);
+~harmBoth = ~addRandomNotes.(~seed, ~harmDurs, ~harm);
+~harmDurs = ~harmBoth[0];
+~harm = ~harmBoth[1];
+
 Given that we currently don't take drums as input, drums can be generated just with: (where size is the length of the output you want)
 
 ~getDrumColumn.(size / 2, size, ~generateDrumRule.(255.rand)); // drum beats (an array of 0's and 1's where 0's are silences and 1's are drum hits)
