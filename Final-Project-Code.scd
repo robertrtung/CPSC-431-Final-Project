@@ -6,6 +6,7 @@
 ~motifCount = 1;
 ~flagArray;
 ~motifDict = Dictionary.new();
+// For testign purposes only
 ~testArray = [[1, 2], [3, 1], [4, 5], [1, 2], [3, 1], [0], [0, 1], [0, 2], [0, 3], [1, 5], [1, 2], [3, 1], [4, 5], [1, 5], [1, 10], [4]];
 (
 //  CHOOSE THE FILE TO READ \\
@@ -664,29 +665,34 @@ while ({i <= 240},{
 
 (
 
-/*Get the melody line's notes with measure organization
-* Returns a list of arrays, each of which represents a measure
+/*Get the melody line's notes and durations with measure organization
+* Returns a two lists (for notes and durations respectively) of arrays, each of which represents a measure
 */
-~extractLineMeasureNotes = {arg input, voice;
+~extractLineMeasureNoteDurs = {arg input, voice;
 	var output = List[];
 	var notesToAdd = List[];
+	var dursToAdd = List[];
+	output.add(List[]);
+	output.add(List[]);
 	// Go through each measure
 	for(0, input.size - 2, {arg i;
 		// Go through each note in each measure
 		for(0, input[i].size - 1, {arg j;
 			if(input[i][j][0] == voice, {
 				notesToAdd.add(input[i][j][1]);
+				dursToAdd.add(input[i][j][2]);
 			});
 		});
 
-		output.add(notesToAdd.asArray);
+		output[0].add(notesToAdd.asArray);
+		output[1].add(dursToAdd.asArray);
 		notesToAdd = List[];
 	});
 	output;
 };
 
 // Test the method above
-//~extractLineMeasureNotes.value([[[1, 2, 3], [1, 2, 3]], [[1, 2, 3]], []], 1).postln;
+/*~extractLineMeasureNoteDurs.value([[[1, 2, 3], [1, 2, 3]], [[1, 2, 3]], []], 1).postln;*/
 
 /*
 * Grab the harmony from the output of the MIDI, which is in an array of measures, each in an array of arrays, each containing [voice, pitch, duration]
@@ -913,7 +919,7 @@ while ({i <= 240},{
 */
 ~noteDurDictionaries = {arg melIndex, map;
 
-	var noteDur = ~extractLine.(~globalOutputArray, melIndex);
+	var noteDur = ~extractLineMeasureNoteDurs.(~globalOutputArray, melIndex);
 	var id = 1;
 	var currRanges;
 	var notes = Dictionary.new(map.size);
@@ -1023,7 +1029,7 @@ while ({i <= 240},{
 * Generate random durations to fit a certain number of beats, given an input set of durations
 */
 ~durationGenerate = { arg durs;
-	var dict = Dictionary.new(durs.size); // Markhov model dictionary
+	var dict = Dictionary.new(durs.size); // Markov model dictionary
 
 	var totalCounts = durs.sum;
 	var out = Array.new(totalCounts); // New durations to be output
@@ -1047,7 +1053,7 @@ while ({i <= 240},{
 		// Initialize first duration of output
 		out = out.add(durs[0]);
 
-		// Each duration generated from the Markhov chain of the previous note
+		// Each duration generated from the Markov chain of the previous note
 		while({totalCounts > 0 && break == 0 && count < 40}, {
 			count = count +1;
 			if(dict.at(out[out.size-1]) == nil, {
@@ -1105,10 +1111,10 @@ while ({i <= 240},{
 // ~durToBeat.(~test,4);
 
 /*
-* Given a set of notes representing a motif, generate a new motif through Markhov models
+* Given a set of notes representing a motif, generate a new motif through Markov models
 */
-~markhovMotif = { arg notes, numNotes;
-	var dict = Dictionary.new(notes.size); // Markhov model dictionary
+~markovMotif = { arg notes, numNotes;
+	var dict = Dictionary.new(notes.size); // Markov model dictionary
 	var out = Array.new(numNotes); // New notes to be output
 
 	// Only calculate nonempty output if notes is nonempty
@@ -1127,7 +1133,7 @@ while ({i <= 240},{
 		// Initialize first note of output
 		out = out.add(notes[0]);
 
-		// Each note generated from the Markhov chain of the previous note
+		// Each note generated from the Markov chain of the previous note
 		for(1, numNotes-1, {arg i;
 			// If the last duration was unique, it will not be in the dictionary, so we need to randomly give a note
 			if(dict.at(out[i-1]) == nil, {
@@ -1141,7 +1147,8 @@ while ({i <= 240},{
 	out;
 };
 
-// ~markhovMotif.([1,2,1,1,3,1,2,5,1,4], 10).postln;
+// Test the function above
+// ~markovMotif.([1,2,1,1,3,1,2,5,1,4], 10).postln;
 
 /*
 * Given a melody line and a harmony line, determine what harmony note was playing when this melody note played.
@@ -1204,19 +1211,118 @@ while ({i <= 240},{
 Returns as [notes, durations]
 */
 ~convertToLine = { arg durDict, noteDict, motifs;
-	var out = Array.new(2);
+	var out;
+	var newDurDict;
+	var newNoteDict;
+	var newDurs;
+	var count;
+
+	out = Array.new(2);
 	out.add([]);
 	out.add([]);
-	// Go through all the elements of the motifs array
-	for(0, motifs.size - 1, {|i|
-		out[0] = out[0] ++ noteDict.at(motifs[i]);
-		out[1] = out[1] ++ durDict.at(motifs[i]);
+	newDurDict = Dictionary.new(durDict.size);
+	newNoteDict = Dictionary.new(noteDict.size);
+	count = 1;
+
+	// Construct a dictionary with the new durations using durationGenerate
+	// and new notes using markovMotif on each "section"
+	while({durDict.at(count) != nil}, {
+		newDurDict.put(count, ~durationGenerate.value(durDict.at(count)));
+		newNoteDict.put(count, ~markovMotif.value(noteDict.at(count), newDurDict.at(count).size));
+		count = count + 1;
+
+		// Go through all the elements of the motifs array and add the new notes and durations to
+		// the respective arrays of the output
+		for(0, motifs.size - 1, {|i|
+			out[0] = out[0] ++ newNoteDict.at(motifs[i]);
+			out[1] = out[1] ++ newDurDict.at(motifs[i]);
+		});
 	});
 	out;
 };
 
+/*
+* Function that randomizes durations.
+* For making harmony not monophonic.
+*/
+~randomizeDurations = {arg seed, durs;
+	var next;
+	var diff;
+	for(0, durs.size - 2, {arg i;
+		next = durs[i+1];
+		if(seed.coin, {
+			diff = next.rand;
+			durs[i] = durs[i] + diff;
+			durs[i+1] = durs[i+1] - diff;
+		});
+	});
+	durs;
+};
+
+// ~randomizeDurations.(0.5, [1,2,3,1,3,2,5,4,1,2,3]).postln;
+
+/*
+* Add intermediate notes randomly.
+*/
+~addRandomNotes = {arg seed, durs, notes;
+	var newDurs = [];
+	var newNotes = [];
+	for(0, durs.size - 1, {arg i;
+		if(seed.coin, {
+			newDurs = newDurs ++ [floor(durs[i]/2)];
+			newDurs = newDurs ++ [durs[i] - floor(durs[i]/2)];
+			newNotes = newNotes ++ [notes[i]];
+			newNotes = newNotes ++ [notes[i]];
+		}, {
+			newDurs = newDurs ++ [durs[i]];
+			newNotes = newNotes ++ [notes[i]];
+		});
+	});
+	[newDurs, newNotes];
+};
+
+// ~addRandomNotes.(0.5,[1,2,3,1,4,1,5,2,6,3,2], [1,2,3,1,4,1,5,2,6,3,2]);
+
+/*
+* Function that gets the notes and durations for the new melody, returns as array of
+* [notes, durations]
+*/
+~getNewMelody = {
+	var formattedNotes;
+	var dividers;
+	var motifArray;
+	var noteDurDict;
+
+	// Get the melody notes properly formatted and grouped by measure
+	formattedNotes = ~extractLineMeasureNoteDurs.value(~globalOutputArray, 1)[0].postln;
+
+	// Get the dividers and the properly set ~flagArray
+	dividers = ~getRepeatsDividers.value(formattedNotes);
+	~handleZeroFlags.value;
+	// Array that has information about order of motifs
+	motifArray = ~determineMotifs.value(dividers, ~flagArray);
+	// Get the note and duration dictionaries
+	noteDurDict = ~noteDurDictionaries.value(1, ~motifDict);
+	"Flag array".postln;
+	~flagArray.postln;
+	"Motif array".postln;
+	motifArray.postln;
+	~motifDict.postln;
+
+	// Finally, convert a dictionary of motif durations (at noteDurDict[1]),
+	// a dictionary of motif notes (at noteDurDict[0]), and
+	// an array of motif numbers into a new array of note and duration arrays
+	// Format is [notes, durations]
+	~convertToLine.value(noteDurDict[1], noteDurDict[0], motifArray).postln;
+
+};
+
+// Test the function above
+~getNewMelody.value();
+
 
 ~afterTrackSelected = {
+	var newMelody;
 
 	a =  ~extractLine.(~globalOutputArray, 1);
 	b =  ~extractLine.(~globalOutputArray, 2);
@@ -1227,6 +1333,10 @@ Returns as [notes, durations]
 	~oldHarmonyRhythms = b[1];
 
 	if(~displayDataInPostWindow, {~post.value});
+
+	newMelody = ~getNewMelody.value();
+	~newMelodyNotes = newMelody[0];
+	~newMelodyRhythms = newMelody[1];
 
 	~setSynths.value;
 	~setDrums.value;
@@ -1308,7 +1418,7 @@ Returns as [notes, durations]
 	};
 	/*
 	* Generate drums.
-	* Drum generation uses Markhov chains on sets of four beats.
+	* Drum generation uses Markov chains on sets of four beats.
 	*/
 	var generateDrums = {arg numBeats;
 		var bass = Array.new(numBeats);
@@ -1320,13 +1430,13 @@ Returns as [notes, durations]
 		var currHat = [0, 0, 0, 0]; // current hat value, initialized at beginning of given motif
 		var currTom = [0, 0, 0, 1]; // current tom value, initialized at beginning of given motif
 
-		// Initialize all the markhov chains with the first value
+		// Initialize all the markov chains with the first value
 		bass = bass ++ currBass;
 		snare = snare ++ currSnare;
 		hat = hat ++ currHat;
 		tom = tom ++ currTom;
 
-		// Determine the rest of the drum sequence through Markhov chains
+		// Determine the rest of the drum sequence through Markov chains
 		for(2,round(numBeats/4), {
 			currBass = nextBass.(currBass);
 			bass = bass ++ currBass;
@@ -1584,78 +1694,7 @@ Returns as [notes, durations]
 
 };
 
-/*
-* Function that randomizes durations.
-* For making harmony not monophonic.
-*/
-~randomizeDurations = {arg seed, durs;
-	var next;
-	var diff;
-	for(0, durs.size - 2, {arg i;
-		next = durs[i+1];
-		if(seed.coin, {
-			diff = next.rand;
-			durs[i] = durs[i] + diff;
-			durs[i+1] = durs[i+1] - diff;
-		});
-	});
-	durs;
-};
 
-// ~randomizeDurations.(0.5, [1,2,3,1,3,2,5,4,1,2,3]).postln;
-
-/*
-* Add intermediate notes randomly.
-*/
-~addRandomNotes = {arg seed, durs, notes;
-	var newDurs = [];
-	var newNotes = [];
-	for(0, durs.size - 1, {arg i;
-		if(seed.coin, {
-			newDurs = newDurs ++ [floor(durs[i]/2)];
-			newDurs = newDurs ++ [durs[i] - floor(durs[i]/2)];
-			newNotes = newNotes ++ [notes[i]];
-			newNotes = newNotes ++ [notes[i]];
-		}, {
-			newDurs = newDurs ++ [durs[i]];
-			newNotes = newNotes ++ [notes[i]];
-		});
-	});
-	[newDurs, newNotes];
-};
-
-// ~addRandomNotes.(0.5,[1,2,3,1,4,1,5,2,6,3,2], [1,2,3,1,4,1,5,2,6,3,2]);
-
-/*
-* Function that gets the notes and durations for the new melody, returns as array of
-* [notes, durations]
-*/
-~getNewMelody = {
-	var formattedNotes;
-	var dividers;
-	var motifArray;
-	var noteDurDict;
-
-	// Get the melody notes properly formatted and grouped by measure
-	formattedNotes = ~extractLineMeasureNotes.value(~globalOutputArray, 1);
-
-	// Get the dividers and the properly set ~flagArray
-	dividers = ~getRepeatsDividers.value(formattedNotes);
-	~handleZeroFlags.value;
-	// Array that has information about order of motifs
-	motifArray = ~determineMotifs.value(dividers, ~flagArray);
-	// Get the note and duration dictionaries
-	noteDurDict = ~noteDurDictionaries.value(1, ~motifDict);
-
-	// Finally, convert a dictionary of motif durations (at noteDurDict[1]),
-	// a dictionary of motif notes (at noteDurDict[0]), and
-	// an array of motif numbers into an array of notes and durations
-	~convertToLine.value(noteDurDict[1], noteDurDict[0], motifArray);
-
-};
-
-// Test the function above
-~getNewMelody.value();
 
 /*
 INSTRUCTIONS: How everything works together:
@@ -1673,7 +1712,7 @@ Call ~convertToLine on this output, lets say stored into ~oldMel
 
 After this, use the following lines to get the output melody notes and durations:
 ~durs = ~durationGenerate.(oldMel[1}); // durations for melody and harmony
-~mel = ~markhovMotif.(~oldMel[0], ~durs.size); // notes for melody
+~mel = ~markovMotif.(~oldMel[0], ~durs.size); // notes for melody
 ~harm = ~writeHarmonyLine.(~oldMel[0], ~oldMel[1], ~oldHarm[0], ~oldHarm[1], ~mel); // notes for harmony
 
 ~harmDurs = ~durs;
