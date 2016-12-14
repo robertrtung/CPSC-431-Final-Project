@@ -1605,6 +1605,28 @@ Returns as [notes, durations]
 // ~randomizeDurations.(0.5, [1,2,3,1,3,2,5,4,1,2,3]).postln;
 
 /*
+* Add intermediate notes randomly.
+*/
+~addRandomNotes = {arg seed, durs, notes;
+	var newDurs = [];
+	var newNotes = [];
+	for(0, durs.size - 1, {arg i;
+		if(seed.coin, {
+			newDurs = newDurs ++ [floor(durs[i]/2)];
+			newDurs = newDurs ++ [durs[i] - floor(durs[i]/2)];
+			newNotes = newNotes ++ [notes[i]];
+			newNotes = newNotes ++ [notes[i]];
+		}, {
+			newDurs = newDurs ++ [durs[i]];
+			newNotes = newNotes ++ [notes[i]];
+		});
+	});
+	[newDurs, newNotes];
+};
+
+// ~addRandomNotes.(0.5,[1,2,3,1,4,1,5,2,6,3,2], [1,2,3,1,4,1,5,2,6,3,2]);
+
+/*
 * Function that gets the notes and durations for the new melody, returns as array of
 * [notes, durations]
 */
