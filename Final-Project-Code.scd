@@ -106,16 +106,6 @@
 		~getMIDI.value(step++octave) + accidental;
 	};
 
-
-/*	~noteValue = {arg string;
-		var length;
-		case
-		{string == "whole"}{length = 4}
-		{string == "half"}{length = 2}
-		{string == "quarter"}{length = 1}
-		{"NEED TO ADD A NEW VARIABLE"};
-	};*/
-
 	~getMIDI = { arg noteStr; // Input letter and octave number from 0-9
 		var len = noteStr.size; // Number of characters in the string
 		var octave = noteStr.separate[(len - 1)].asInt;
@@ -170,7 +160,7 @@
 	// > > > > > INSERT .XML FILE HERE < < < < < \\
 	//                     "~/path/fileName"                       \\
 	~longString = ~makeLongStringFromXML.value(
-		("~/Desktop/CPSC-431-final-project/"++~fileName));
+		("~/Desktop/CPSC-431-Final-Project/"++~fileName));
 	//    > > > > > > > > ><  < < < < < < < < <   \\
 
 
@@ -1594,6 +1584,25 @@ Returns as [notes, durations]
 
 };
 
+/*
+* Function that randomizes durations.
+* For making harmony not monophonic.
+*/
+~randomizeDurations = {arg seed, durs;
+	var next;
+	var diff;
+	for(0, durs.size - 2, {arg i;
+		next = durs[i+1];
+		if(seed.coin, {
+			diff = next.rand;
+			durs[i] = durs[i] + diff;
+			durs[i+1] = durs[i+1] - diff;
+		});
+	});
+	durs;
+};
+
+// ~randomizeDurations.(0.5, [1,2,3,1,3,2,5,4,1,2,3]).postln;
 
 /*
 * Function that gets the notes and durations for the new melody, returns as array of
