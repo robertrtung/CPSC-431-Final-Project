@@ -1,4 +1,5 @@
 (
+(
 // true or false, if you want to see the results of the analysis posted
 ~displayDataInPostWindow = false;
 
@@ -372,14 +373,13 @@ while ({i <= 240},{
 */
 ~makeGUI = {
 	var menu_melSynth, menu_harmSynth, menu_track, menu_version, menu_tempo,
-	button_print_preset, button_play, text_choose_synths, text_presets,
-	button_preset1, button_preset2, button_preset3, button_preset4,
+	button_print_preset, button_play, text_choose_synths, text_choose_drums, text_presets,
+	button_preset1, button_preset2, button_preset3, button_preset4, new_drums, new_drum_arr, in, new_snare, new_tom, new_hat, new_bass,
 	param_1m, param_2m, param_3m, param_4m,
 	param_1h, param_2h, param_3h, param_4h;
 
 	w = Window.new("Group Mare Tranquillitatis GUI", Rect(200,200,600,400));
 	w.view.background_(Color.black);
-
 
 	// - - - - - - - - - - TEXT - - - - - - - - - - \\
 
@@ -401,6 +401,7 @@ while ({i <= 240},{
 	text_presets.align = \center;
 	text_presets.font = Font(size: 10);
 	text_presets.background = Color(1, 0, 0, 0.7);
+
 
 
 	// - - - - - - - - - - POP UP MENUS - - - - - - - - - - \\
@@ -426,7 +427,17 @@ while ({i <= 240},{
 		~setSynths.value;
 	};
 
-	menu_track = PopUpMenu(w, Rect(425, 100, 150, 20));
+	text_choose_drums = StaticText.new(w,Rect(425, 15, 150, 30)).string_("Manual Drum Rule (optional)");
+	text_choose_drums.align = \center;
+	// text_choose_drums.font = Font(size: 40);
+	text_choose_drums.background = Color(1, 0, 0, 0.7);
+
+	new_snare = TextField.new(w,Rect(425, 50, 150, 20));
+	new_tom = TextField.new(w,Rect(425, 75, 150, 20));
+	new_hat = TextField.new(w,Rect(425, 100, 150, 20));
+	new_bass = TextField.new(w,Rect(425, 125, 150, 20));
+
+	menu_track = PopUpMenu(w, Rect(425, 150, 150, 20));
 	menu_track.items = [
 		"Choose which file", "Mario Theme", "Pokemon Theme", "Pokemon Battle"
 	];
@@ -438,7 +449,7 @@ while ({i <= 240},{
 		~afterTrackSelected.value;
 	};
 
-    menu_version = PopUpMenu(w, Rect(425, 125, 150, 20));
+    menu_version = PopUpMenu(w, Rect(425, 175, 150, 20));
 	menu_version.items = [
 		"Choose version", "Original version", "New version"
 	];
@@ -470,6 +481,59 @@ while ({i <= 240},{
 				// Play the new version if selected, else play the old
 				if (menu_version.value == 2, {
 					~playNewMelody.play;
+
+					// Generate drums based on old drums if they exist
+
+					// TODO:Test
+					/*in_snare = new_snare.value;
+					in_tom = new_tom.value;
+					in_hat = new_snare.value;
+					in_bass = new_bass.value;
+					if((in_snare.size > 0) && (in_tom.size > 0) && (in_hat.size > 0) && (in_bass.size > 0), {
+												new_drum_arr = [];
+						for(0,in_snare.size - 1, {arg i;
+							// in_snare[i].digit.postln;
+							// (in_snare[i].digit - 1).postln;
+							new_drum_arr = new_drum_arr ++ [in_snare[i].digit];
+						});
+
+						// This is the part I'm not sure about
+						~new_snare = ~getDrumColumn.(floor(new_drum_arr.size / 2), new_drum_arr.size, ~generateDrumRule.(~findClosestDrumRule.(new_drum_arr)));
+
+						new_drum_arr = [];
+						for(0,in_tom.size - 1, {arg i;
+							// in_tom[i].digit.postln;
+							// (in_tom[i].digit - 1).postln;
+							new_drum_arr = new_drum_arr ++ [in_tom[i].digit];
+						});
+
+						// This is the part I'm not sure about
+						~new_tom = ~getDrumColumn.(floor(new_drum_arr.size / 2), new_drum_arr.size, ~generateDrumRule.(~findClosestDrumRule.(new_drum_arr)));
+
+						new_drum_arr = [];
+						for(0,in_hat.size - 1, {arg i;
+							// in_hat[i].digit.postln;
+							// (in_hat[i].digit - 1).postln;
+							new_drum_arr = new_drum_arr ++ [in_hat[i].digit];
+						});
+
+						// This is the part I'm not sure about
+						~new_hat = ~getDrumColumn.(floor(new_drum_arr.size / 2), new_drum_arr.size, ~generateDrumRule.(~findClosestDrumRule.(new_drum_arr)));
+
+						new_drum_arr = [];
+						for(0,in_bass.size - 1, {arg i;
+							// in_bass[i].digit.postln;
+							// (in_bass[i].digit - 1).postln;
+							new_drum_arr = new_drum_arr ++ [in_bass[i].digit];
+						});
+
+						// This is the part I'm not sure about
+						~new_bass = ~getDrumColumn.(floor(new_drum_arr.size / 2), new_drum_arr.size, ~generateDrumRule.(~findClosestDrumRule.(new_drum_arr)));
+						~playNewDrums.play;
+					}, {
+						~playDrums.play;
+					});*/
+
 				},{
 					~playOldMelody.play;
 					~playHarmony.play;
@@ -666,8 +730,9 @@ while ({i <= 240},{
 
 };
 );
+// PLAY HERE
 ~makeGUI.value;
-
+);
 ///////////////////////////////////////
 
 (
@@ -971,8 +1036,6 @@ while ({i <= 240},{
 ~cellularAutomataArray = {arg size, rules;
 	var arr = Array.fill(size, {Array.fill(size, {0})}); // create an array full of 0s
 	arr[0].put(size / 2, 1);
-	rules.postln;
-	rules.at('[,1,1]'.asSymbol).postln;
 
 	// Code in the loop below taken from Professor Petersen's notes
 	arr.do {|row, index|
@@ -1026,8 +1089,9 @@ while ({i <= 240},{
 	var minRule = 1; // closest rule to output
 
 	// loop through rules and find the closest rule
-	for(1,255, {arg i;
-		if((drums-~getDrumColumn.(drums.size / 2, drums.size, ~generateDrumRule.(i))).sum < minDiff, {
+	for(0,255, {arg i;
+		if((drums-~getDrumColumn.(drums.size / 2, drums.size, ~generateDrumRule.(i))).abs.sum < minDiff, {
+			minDiff = (drums-~getDrumColumn.(drums.size / 2, drums.size, ~generateDrumRule.(i))).sum;
 			minRule = i;
 		});
 	});
@@ -1376,6 +1440,7 @@ Returns as [notes, durations]
 ~bpm = 104;
 
 ~setSynths = {
+	var a1, a2, a3, a4;
 	var tempo = 60/~bpm;
 	var rolloffList = List[];
 	var attackList = List[];
@@ -1496,6 +1561,42 @@ Returns as [notes, durations]
 	c = Pseq (drumNotes[2],1);
 	d = Pseq (drumNotes[3],1);
 
+	/*
+	// TODO: Test
+	while({~new_snare.size < ~newMelodyRhythms.sum}, {
+		~new_snare = ~new_snare ++ ~new_snare;
+	});
+	while({~new_snare.size > ~newMelodyRhythms.sum}, {
+		~new_snare.removeAt(~new_snare.size - 1);
+	});
+
+	while({~new_tom.size < ~newMelodyRhythms.sum}, {
+		~new_tom = ~new_tom ++ ~new_tom;
+	});
+	while({~new_tom.size > ~newMelodyRhythms.sum}, {
+		~new_tom.removeAt(~new_tom.size - 1);
+	});
+
+	while({~new_tom.size < ~newMelodyRhythms.sum}, {
+		~new_tom = ~new_tom ++ ~new_tom;
+	});
+	while({~new_tom.size > ~newMelodyRhythms.sum}, {
+		~new_tom.removeAt(~new_tom.size - 1);
+	});
+
+	while({~new_tom.size < ~newMelodyRhythms.sum}, {
+		~new_tom = ~new_tom ++ ~new_tom;
+	});
+	while({~new_tom.size > ~newMelodyRhythms.sum}, {
+		~new_tom.removeAt(~new_tom.size - 1);
+	});
+
+	a1 = Pseq (~newsnare,1);
+	a2 = Pseq (~newtom,1);
+	a3 = Pseq (~newhat,1);
+	a4 = Pseq (~newbass,1);
+	*/
+
 	// DRUM LEVELS
 	// [bass, snare, hat, tom]
 	e = [0.9, 0.9, 0.6, 0.15];
@@ -1510,6 +1611,18 @@ Returns as [notes, durations]
 		\hatLevel, Pseq ([c]*e[2], 1),
 		\tomLevel, Pseq ([d]*e[3], 1)
 	);
+
+	/*
+	// TODO: Test
+	~playNewDrums = Pbind(
+		\instrument, \drums,
+		\dur, ~speed,
+		\bassLevel, Pseq ([a1]*e[0], 1),
+		\snareLevel, Pseq ([b2]*e[1], 1),
+		\hatLevel, Pseq ([c3]*e[2], 1),
+		\tomLevel, Pseq ([d4]*e[3], 1)
+	);
+	*/
 
 
 	//------------------------ \sine ------------------------------\\
