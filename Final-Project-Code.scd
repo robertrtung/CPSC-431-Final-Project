@@ -5,7 +5,9 @@
 ~trackNumber = 1;
 ~motifCount = 1;
 ~flagArray;
-~motifDict = Dictionary.new();
+~motifDict;
+~melodyNotesToPlay;
+~melodyRhythmsToPlay;
 // For testign purposes only
 ~testArray = [[1, 2], [3, 1], [4, 5], [1, 2], [3, 1], [0], [0, 1], [0, 2], [0, 3], [1, 5], [1, 2], [3, 1], [4, 5], [1, 5], [1, 10], [4]];
 (
@@ -442,7 +444,6 @@ while ({i <= 240},{
 	];
 	menu_version.background = Color.red;
 	menu_version.action = {
-// TODO: fill out action on new vs old version
 	};
 
 	menu_tempo = PopUpMenu(w, Rect(450, 200, 100, 20));
@@ -466,9 +467,15 @@ while ({i <= 240},{
 			if (menu_version.value == 0, {
 				"PLEASE SELECT A VERSION".postln;
 			},{
-				~playMelody.play;
-				~playHarmony.play;
-				~playDrums.play;
+				// Play the new version if selected, else play the old
+				if (menu_version.value == 2, {
+					~playNewMelody.play;
+				},{
+					~playOldMelody.play;
+					~playHarmony.play;
+					~playDrums.play;
+				});
+
 			});
 		});
 
@@ -719,6 +726,7 @@ while ({i <= 240},{
 */
 ~getZeroFlagArray = { arg arrSize;
 	var outArray = List.new(arrSize);
+	~motifCount = 1;
 	arrSize.do({outArray.add(0)});
 	outArray;
 };
@@ -809,6 +817,7 @@ while ({i <= 240},{
 	var dividersToAdd;
 	var motifStart;
 	var motifEnd;
+	~motifDict = Dictionary.new();
 	~flagArray = ~getZeroFlagArray.value(measuresArr.size);
 
 	// Go through notes and find any sequences that are equal
@@ -1313,12 +1322,12 @@ Returns as [notes, durations]
 	// a dictionary of motif notes (at noteDurDict[0]), and
 	// an array of motif numbers into a new array of note and duration arrays
 	// Format is [notes, durations]
-	~convertToLine.value(noteDurDict[1], noteDurDict[0], motifArray).postln;
+	~convertToLine.value(noteDurDict[1], noteDurDict[0], motifArray);
 
 };
 
 // Test the function above
-~getNewMelody.value();
+ //~getNewMelody.value();
 
 
 ~afterTrackSelected = {
@@ -1335,8 +1344,8 @@ Returns as [notes, durations]
 	if(~displayDataInPostWindow, {~post.value});
 
 	newMelody = ~getNewMelody.value();
-	~newMelodyNotes = newMelody[0];
-	~newMelodyRhythms = newMelody[1];
+	~newMelodyNotes = newMelody.at(0);
+	~newMelodyRhythms = newMelody.at(1);
 
 	~setSynths.value;
 	~setDrums.value;
@@ -1606,7 +1615,7 @@ Returns as [notes, durations]
 
 	rhythms = ~oldMelodyRhythms * tempo;
 
-	~playMelody = Pbind(
+	~playOldMelody = Pbind(
 		\instrument, ~melodyInstrument,
 		//\midinote, Pseq(~mel, 1),
 		\midinote, Pseq(~oldMelodyNotes, 1),
@@ -1633,6 +1642,24 @@ Returns as [notes, durations]
 		\decay, ~harmonyDecay,
 		\susLvl, ~harmonySusLvl,
 		\release, ~harmonyRelease,
+	);
+
+	//rhythms = ~newMelodyRhythms * tempo;
+
+	~playNewMelody = Pbind(
+		\instrument, ~melodyInstrument,
+		//\midinote, Pseq(~mel, 1),
+		\midinote, Pseq(~newMelodyNotes, 1),
+		\dur, Pseq(~newMelodyRhythms * tempo, 1),
+		\sustain, Pseq(~newMelodyRhythms * tempo, 1),
+		\amp, 0.2,
+		\delay, 0.001,
+		\attack, ~melodyAttack,
+		\decay, ~melodyDecay,
+		\susLvl, ~melodySusLvl,
+		\release, ~melodyRelease,
+		//\rolloff, Pseq(rolloffList, 1)
+		\rolloff, 1.5
 	);
 
 	/*Pbind(
