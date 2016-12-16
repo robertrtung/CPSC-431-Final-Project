@@ -9,7 +9,7 @@
 ~motifDict;
 ~melodyNotesToPlay;
 ~melodyRhythmsToPlay;
-// For testign purposes only
+// For testing purposes only
 ~testArray = [[1, 2], [3, 1], [4, 5], [1, 2], [3, 1], [0], [0, 1], [0, 2], [0, 3], [1, 5], [1, 2], [3, 1], [4, 5], [1, 5], [1, 10], [4]];
 (
 //  CHOOSE THE FILE TO READ \\
@@ -430,7 +430,6 @@ while ({i <= 240},{
 
 	text_choose_drums = StaticText.new(w,Rect(425, 15, 150, 30)).string_("Manual Drum Rule (optional)");
 	text_choose_drums.align = \center;
-	// text_choose_drums.font = Font(size: 40);
 	text_choose_drums.background = Color(1, 0, 0, 0.7);
 
 	new_snare = TextField.new(w,Rect(425, 50, 150, 20));
@@ -481,13 +480,8 @@ while ({i <= 240},{
 			},{
 				// Play the new version if selected, else play the old
 				if (menu_version.value == 2, {
-					//~playNewMelody.play;
-					//~playNewHarmony.play;
-				//	~playDrums.play;
-
 					// Generate drums based on old drums if they exist
-
-					// TODO: Test
+					// This is the optional input section on the GUI
 					in_snare = new_snare.value;
 					in_tom = new_tom.value;
 					in_hat = new_hat.value;
@@ -495,32 +489,26 @@ while ({i <= 240},{
 					if((in_snare.size > 0) && (in_tom.size > 0) && (in_hat.size > 0) && (in_bass.size > 0), {
 												new_drum_arr = [];
 						for(0,in_snare.size - 1, {arg i;
-							 //in_snare[i].digit.postln;
-							 //(in_snare[i].digit - 1).postln;
 							new_drum_arr = new_drum_arr ++ [in_snare[i].digit];
 						});
 
-						// This is the part I'm not sure about
+						// Make new snare line
 						~new_snare = ~getDrumColumn.(floor(new_drum_arr.size / 2), new_drum_arr.size, ~generateDrumRule.(~findClosestDrumRule.(new_drum_arr))).postln;
 
 						new_drum_arr = [];
 						for(0,in_tom.size - 1, {arg i;
-							// in_tom[i].digit.postln;
-							// (in_tom[i].digit - 1).postln;
 							new_drum_arr = new_drum_arr ++ [in_tom[i].digit];
 						});
 
-						// This is the part I'm not sure about
+						// Make new tom line
 						~new_tom = ~getDrumColumn.(floor(new_drum_arr.size / 2), new_drum_arr.size, ~generateDrumRule.(~findClosestDrumRule.(new_drum_arr)));
 
 						new_drum_arr = [];
 						for(0,in_hat.size - 1, {arg i;
-							// in_hat[i].digit.postln;
-							// (in_hat[i].digit - 1).postln;
 							new_drum_arr = new_drum_arr ++ [in_hat[i].digit];
 						});
 
-						// This is the part I'm not sure about
+						// Make new hat line
 						~new_hat = ~getDrumColumn.(floor(new_drum_arr.size / 2), new_drum_arr.size, ~generateDrumRule.(~findClosestDrumRule.(new_drum_arr)));
 
 						new_drum_arr = [];
@@ -530,7 +518,7 @@ while ({i <= 240},{
 							new_drum_arr = new_drum_arr ++ [in_bass[i].digit];
 						});
 
-						// This is the part I'm not sure about
+						// Make new bass line
 						~new_bass = ~getDrumColumn.(floor(new_drum_arr.size / 2), new_drum_arr.size, ~generateDrumRule.(~findClosestDrumRule.(new_drum_arr)));
 
 						// Make the rules the right length
@@ -565,6 +553,7 @@ while ({i <= 240},{
 
 						~new_snare.postln;
 						// End rule manipulation
+
 						~playNewMelody;
 						~playNewHarmony;
 						// play the new drums
@@ -723,7 +712,6 @@ while ({i <= 240},{
 
 	// - - - - - - - - - - INITIALIZE VALUES - - - - - - - - - - \\
 
-
 	~settingsArray = {
 		[
 			param_1m.value, param_2m.value, param_3m.value, param_4m.value,
@@ -752,8 +740,6 @@ while ({i <= 240},{
 	~setSliders.value(~presetsArray[0]);
 
 
-
-
 	// - - - - - - - - - - DRAW LINES - - - - - - - - - - \\
 
 	w.drawFunc = {
@@ -773,9 +759,6 @@ while ({i <= 240},{
 	w.refresh;
 
 	w.front;
-
-	//CmdPeriod.doOnce({w.close});
-
 };
 );
 // PLAY HERE
