@@ -16,18 +16,11 @@
 ~fileNameArray = ["xml_mario_theme.xml", "xml_pokemon_battle.xml"];
 ~fileName = ~fileNameArray[1];
 
-// ~globalOutputArray is the array you will use. it has MIDI note and duration
-
+// ~globalOutputArray has MIDI note and duration parsed from XML
 // the index in that array indicates the measure number
-
 // ex. ~globalOutputArray[0] = measure 1, ~globalOutputArray[1] = measure 2, etc...
-
 // each index contains [voice#, midi_note#, note_length]
-//   in the correct order that they appear in that measure
 
-// this is good for monophonic instruments, but you can have several of them.
-
-// it works for sharps, flats, and dotted rhythms as well
 ~analyze = {
 	var rest, pitch, dot, instrument_ID, measure_number, midiNote, duration;
 
