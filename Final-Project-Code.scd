@@ -470,10 +470,11 @@ while ({i <= 240},{
 				// Play the new version if selected, else play the old
 				if (menu_version.value == 2, {
 					~playNewMelody.play;
+					~playNewHarmony.play;
+					~playDrums.play;
 				},{
 					~playOldMelody.play;
 					~playHarmony.play;
-					~playDrums.play;
 				});
 
 			});
@@ -1329,9 +1330,12 @@ Returns as [notes, durations]
 // Test the function above
  //~getNewMelody.value();
 
-
+// After a track is selected, set/compute the new and old melody and
+// harmony notes
 ~afterTrackSelected = {
 	var newMelody;
+	var seed;
+	var harmNotesDurs;
 
 	a =  ~extractLine.(~globalOutputArray, 1);
 	b =  ~extractLine.(~globalOutputArray, 2);
@@ -1346,6 +1350,19 @@ Returns as [notes, durations]
 	newMelody = ~getNewMelody.value();
 	~newMelodyNotes = newMelody.at(0);
 	~newMelodyRhythms = newMelody.at(1);
+	~newHarmonyNotes = ~writeHarmonyLine.(
+		~oldMelodyNotes,
+		~oldMelodyRhythms,
+		~oldHarmonyNotes,
+		~oldHarmonyRhythms,
+		~newMelodyNotes); // notes for the harmony
+	seed = 1.0.rand;
+	~newHarmonyRhythms = ~newMelodyRhythms;
+	//~newHarmonyRhythms = ~randomizeDurations.value(seed, ~newMelodyRhythms);
+	/*harmNotesDurs = ~addRandomNotes.value(
+		seed, ~newHarmonyRhythms, ~newHarmonyNotes);
+	~newHarmonyRhythms = harmNotesDurs[0];
+	~newHarmonyNotes = harmNotesDurs[1];*/
 
 	~setSynths.value;
 	~setDrums.value;
@@ -1464,8 +1481,14 @@ Returns as [notes, durations]
 	};
 
 	// Generate the drums for this melody
-	//var drumNotes = generateDrums.(~mel.sum);
-	var drumNotes = generateDrums.(~oldMelodyRhythms.sum*2);
+//	var drumNotes = generateDrums.(~mel.sum);
+//	var drumNotes = generateDrums.(~oldMelodyRhythms.sum*2);
+	var size = 50;
+	 var drumNotes = [
+	 	~getDrumColumn.(size / 2 + 2, size, ~generateDrumRule.(255.rand)),
+	 	~getDrumColumn.(size / 2 + 1, size, ~generateDrumRule.(255.rand)),
+	 	~getDrumColumn.(size / 2, size, ~generateDrumRule.(255.rand)),
+		~getDrumColumn.(size / 2 - 1, size, ~generateDrumRule.(255.rand))];
 
 
 	// These drums are taken from http://superdupercollider.blogspot.com/2009/02/simple-drum-machine.html
@@ -1490,7 +1513,7 @@ Returns as [notes, durations]
 	}).store;
 
 
-	~speed = tempo/4;
+	~speed = tempo/2;
 	a = Pseq (drumNotes[0],1);
 	b = Pseq (drumNotes[1],1);
 	c = Pseq (drumNotes[2],1);
@@ -1500,15 +1523,15 @@ Returns as [notes, durations]
 	// [bass, snare, hat, tom]
 	e = [0.9, 0.9, 0.6, 0.15];
 
-	// Play the drums
+	// Play the drums for the new version, since the old version doesn't have drums
 
 	~playDrums = Pbind(
 		\instrument, \drums,
 		\dur, ~speed,
-		\bassLevel, Pseq ([a]*e[0], 1),
-		\snareLevel, Pseq ([b]*e[1], 1),
-		\hatLevel, Pseq ([c]*e[2], 1),
-		\tomLevel, Pseq ([d]*e[3], 1)
+		\bassLevel, Pseq ([a]*e[0], inf),
+		\snareLevel, Pseq ([b]*e[1], inf),
+		\hatLevel, Pseq ([c]*e[2], inf),
+		\tomLevel, Pseq ([d]*e[3], inf)
 	);
 
 
@@ -1662,6 +1685,18 @@ Returns as [notes, durations]
 		\rolloff, 1.5
 	);
 
+	~playNewHarmony = Pbind(
+		\instrument, ~harmonyInstrument,
+		\midinote, Pseq(~newHarmonyNotes, 1),
+		\dur, Pseq(~newHarmonyRhythms * tempo, 1),
+		\sustain, Pseq(~newHarmonyRhythms * tempo, 1),
+		\amp, 0.2,
+		\attack, ~harmonyAttack,
+		\decay, ~harmonyDecay,
+		\susLvl, ~harmonySusLvl,
+		\release, ~harmonyRelease,
+	);
+
 	/*Pbind(
 	\instrument, \bass,
 	//\midinote, Pseq(~harm, 1),
@@ -1744,8 +1779,8 @@ After this, use the following lines to get the output melody notes and durations
 
 ~harmDurs = ~durs;
 
-// **NEW: to write a varied harmony, have the UI take a number between 0 and 1 (set it to ~seed) and then do ~harmDurs = ~randomizeDurations.(~seed, ~harmDurs);
-~harmBoth = ~addRandomNotes.(~seed, ~harmDurs, ~harm);
+// **NEW: to write a varied harmony, have the UI take a number between 0 and 1 (set it to ~seed) and then do ~harmDurs = ~randomizeDurations.value(~seed, ~harmDurs);
+~harmBoth = ~addRandomNotes.value(~seed, ~harmDurs, ~harm);
 ~harmDurs = ~harmBoth[0];
 ~harm = ~harmBoth[1];
 
