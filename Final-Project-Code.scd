@@ -481,8 +481,8 @@ while ({i <= 240},{
 			},{
 				// Play the new version if selected, else play the old
 				if (menu_version.value == 2, {
-					~playNewMelody.play;
-					~playNewHarmony.play;
+					//~playNewMelody.play;
+					//~playNewHarmony.play;
 				//	~playDrums.play;
 
 					// Generate drums based on old drums if they exist
@@ -495,13 +495,13 @@ while ({i <= 240},{
 					if((in_snare.size > 0) && (in_tom.size > 0) && (in_hat.size > 0) && (in_bass.size > 0), {
 												new_drum_arr = [];
 						for(0,in_snare.size - 1, {arg i;
-							// in_snare[i].digit.postln;
-							// (in_snare[i].digit - 1).postln;
+							 //in_snare[i].digit.postln;
+							 //(in_snare[i].digit - 1).postln;
 							new_drum_arr = new_drum_arr ++ [in_snare[i].digit];
 						});
 
 						// This is the part I'm not sure about
-						~new_snare = ~getDrumColumn.(floor(new_drum_arr.size / 2), new_drum_arr.size, ~generateDrumRule.(~findClosestDrumRule.(new_drum_arr)));
+						~new_snare = ~getDrumColumn.(floor(new_drum_arr.size / 2), new_drum_arr.size, ~generateDrumRule.(~findClosestDrumRule.(new_drum_arr))).postln;
 
 						new_drum_arr = [];
 						for(0,in_tom.size - 1, {arg i;
@@ -532,8 +532,54 @@ while ({i <= 240},{
 
 						// This is the part I'm not sure about
 						~new_bass = ~getDrumColumn.(floor(new_drum_arr.size / 2), new_drum_arr.size, ~generateDrumRule.(~findClosestDrumRule.(new_drum_arr)));
-						~playNewDrums.play;
+
+						// Make the rules the right length
+						while({~new_snare.size < ~newMelodyRhythms.sum}, {
+							~new_snare = ~new_snare ++ ~new_snare;
+						});
+						while({~new_snare.size > ~newMelodyRhythms.sum}, {
+							~new_snare.removeAt(~new_snare.size - 1);
+						});
+						~new_snare.postln;
+
+						while({~new_tom.size < ~newMelodyRhythms.sum}, {
+							~new_tom = ~new_tom ++ ~new_tom;
+						});
+						while({~new_tom.size > ~newMelodyRhythms.sum}, {
+							~new_tom.removeAt(~new_tom.size - 1);
+						});
+
+						while({~new_bass.size < ~newMelodyRhythms.sum}, {
+							~new_bass = ~new_bass ++ ~new_bass;
+						});
+						while({~new_bass.size > ~newMelodyRhythms.sum}, {
+							~new_bass.removeAt(~new_bass.size - 1);
+						});
+
+						while({~new_hat.size < ~newMelodyRhythms.sum}, {
+							~new_hat = ~new_tom ++ ~new_tom;
+						});
+						while({~new_hat.size > ~newMelodyRhythms.sum}, {
+							~new_hat.removeAt(~new_hat.size - 1);
+						});
+
+						~new_snare.postln;
+						// End rule manipulation
+						~playNewMelody;
+						~playNewHarmony;
+						// play the new drums
+						~playNewDrums =Pbind(
+							\instrument, \drums,
+							\dur, ~speed,
+							\bassLevel, Pseq ([Pseq (~new_bass,1)]*e[0], 1),
+							\snareLevel, Pseq ([Pseq (~new_snare,1)]*e[1], 1),
+							\hatLevel, Pseq ([Pseq (~new_hat,1)]*e[2], 1),
+							\tomLevel, Pseq ([Pseq (~new_tom,1)]*e[3], 1));
+						// Play after 6 seconds
+						Ppar([6.0, ~playNewMelody, ~playNewHarmony, ~playNewDrums]).play;
 					}, {
+						~playNewMelody.play;
+						~playNewHarmony.play;
 						~playDrums.play;
 					});
 
@@ -1587,7 +1633,7 @@ Returns as [notes, durations]
 
 
 	// TODO: Test
-	while({~new_snare.size < ~newMelodyRhythms.sum}, {
+	/*while({~new_snare.size < ~newMelodyRhythms.sum}, {
 		~new_snare = ~new_snare ++ ~new_snare;
 	});
 	while({~new_snare.size > ~newMelodyRhythms.sum}, {
@@ -1620,7 +1666,7 @@ Returns as [notes, durations]
 	c3 = Pseq (~new_hat,1);
 	d4 = Pseq (~new_bass,1);
 
-
+*/
 	// DRUM LEVELS
 	// [bass, snare, hat, tom]
 	e = [0.9, 0.9, 0.6, 0.15];
@@ -1637,15 +1683,15 @@ Returns as [notes, durations]
 	);
 
 
-	// TODO: Test
+/*	// TODO: Test
 	~playNewDrums = Pbind(
 		\instrument, \drums,
 		\dur, ~speed,
-		\bassLevel, Pseq ([a1]*e[0], 1),
-		\snareLevel, Pseq ([b2]*e[1], 1),
-		\hatLevel, Pseq ([c3]*e[2], 1),
-		\tomLevel, Pseq ([d4]*e[3], 1)
-	);
+		\bassLevel, Pseq ([Pseq (~new_bass,1)]*e[0], 1),
+		\snareLevel, Pseq ([Pseq (~new_snare,1)]*e[1], 1),
+		\hatLevel, Pseq ([Pseq (~new_hat,1)]*e[2], 1),
+		\tomLevel, Pseq ([Pseq (~new_tom,1)]*e[3], 1)
+	);*/
 
 
 
