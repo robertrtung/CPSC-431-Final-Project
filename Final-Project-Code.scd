@@ -13,7 +13,7 @@
 ~testArray = [[1, 2], [3, 1], [4, 5], [1, 2], [3, 1], [0], [0, 1], [0, 2], [0, 3], [1, 5], [1, 2], [3, 1], [4, 5], [1, 5], [1, 10], [4]];
 (
 //  CHOOSE THE FILE TO READ \\
-~fileNameArray = ["xml_mario_theme.xml", "xml_pokemon_theme.xml", "xml_pokemon_battle.xml"];
+~fileNameArray = ["xml_mario_theme.xml", "xml_pokemon_battle.xml"];
 ~fileName = ~fileNameArray[1];
 
 // ~globalOutputArray is the array you will use. it has MIDI note and duration
@@ -439,7 +439,7 @@ while ({i <= 240},{
 
 	menu_track = PopUpMenu(w, Rect(425, 150, 150, 20));
 	menu_track.items = [
-		"Choose which file", "Mario Theme", "Pokemon Theme", "Pokemon Battle"
+		"Choose which file", "Mario Theme", "Pokemon Battle"
 	];
 	menu_track.background = Color.red;
 	menu_track.action = {
@@ -449,7 +449,7 @@ while ({i <= 240},{
 		~afterTrackSelected.value;
 	};
 
-    menu_version = PopUpMenu(w, Rect(425, 175, 150, 20));
+	menu_version = PopUpMenu(w, Rect(425, 175, 150, 20));
 	menu_version.items = [
 		"Choose version", "Original version", "New version"
 	];
@@ -487,7 +487,7 @@ while ({i <= 240},{
 					in_hat = new_hat.value;
 					in_bass = new_bass.value;
 					if((in_snare.size > 0) && (in_tom.size > 0) && (in_hat.size > 0) && (in_bass.size > 0), {
-												new_drum_arr = [];
+						new_drum_arr = [];
 						for(0,in_snare.size - 1, {arg i;
 							new_drum_arr = new_drum_arr ++ [in_snare[i].digit];
 						});
@@ -513,8 +513,6 @@ while ({i <= 240},{
 
 						new_drum_arr = [];
 						for(0,in_bass.size - 1, {arg i;
-							// in_bass[i].digit.postln;
-							// (in_bass[i].digit - 1).postln;
 							new_drum_arr = new_drum_arr ++ [in_bass[i].digit];
 						});
 
@@ -764,11 +762,11 @@ while ({i <= 240},{
 // PLAY HERE
 ~makeGUI.value;
 );
-///////////////////////////////////////
 
 (
 
-/*Get the melody line's notes and durations with measure organization
+/*
+* Get the melody line's notes and durations with measure organization
 * Returns a two lists (for notes and durations respectively) of arrays, each of which represents a measure
 */
 ~extractLineMeasureNoteDurs = {arg input, voice;
@@ -793,9 +791,6 @@ while ({i <= 240},{
 	});
 	output;
 };
-
-// Test the method above
-/*~extractLineMeasureNoteDurs.value([[[1, 2, 3], [1, 2, 3]], [[1, 2, 3]], []], 1).postln;*/
 
 /*
 * Grab the harmony from the output of the MIDI, which is in an array of measures, each in an array of arrays, each containing [voice, pitch, duration]
@@ -827,9 +822,6 @@ while ({i <= 240},{
 	outArray;
 };
 
-// Test the function above
-/*~getZeroFlagArray.value(6);*/
-
 // Check that the measures following the matched ones are not yet marked
 // Also check that they all match the measure following currentIndex
 ~checkNextMeasures = { arg currentIndex, measuresArr, matches;
@@ -842,11 +834,11 @@ while ({i <= 240},{
 				measuresArr[currentIndex + 1];
 
 				if ((~flagArray[measureIndex + 1] != 0) ||
-				(measuresArr[measureIndex + 1] != measuresArr[currentIndex + 1]),
-				// We can't continue because the next measure is marked as non-zero
-				// or the next measure doesn't match the one at currentIndex + 1
-				{measuresArr[measureIndex + 1];
-				measuresArr[currentIndex + 1];
+					(measuresArr[measureIndex + 1] != measuresArr[currentIndex + 1]),
+					// We can't continue because the next measure is marked as non-zero
+					// or the next measure doesn't match the one at currentIndex + 1
+					{measuresArr[measureIndex + 1];
+						measuresArr[currentIndex + 1];
 						bool = false;}
 			);}
 		);
@@ -881,9 +873,9 @@ while ({i <= 240},{
 	// Make sure we don't run into a marked section and don't run off the end of the array
 	while ({(~flagArray[currentIndex + 1] == 0) &&
 		(~checkNextMeasures.value(currentIndex, measuresArr, matches) == true)},
-		// Increment the currentIndex as well as the matches indicies because
-		// we know they're safe
-		{currentIndex = (currentIndex + 1);
+	// Increment the currentIndex as well as the matches indicies because
+	// we know they're safe
+	{currentIndex = (currentIndex + 1);
 		matches = ~incrementMatches.value(matches);
 
 		// Set the flags for the motif
@@ -894,11 +886,6 @@ while ({i <= 240},{
 	newDividers = (rawMatches ++ (matches + 1)).add(measureIndex).add(currentIndex + 1);
 	newDividers;
 };
-
-// Testing code--make sure to keep commented if testing the real thing
-// ~flagArray = ~getZeroFlagArray.value(~testArray.size);
-// ~getRepeatSectionDividers.value(~testArray, 0, List[3]);
-// ~flagArray;
 
 
 /*
@@ -955,7 +942,7 @@ while ({i <= 240},{
 				},
 				// Else there were no matches
 				{measureIndex = measureIndex + 1;});
-			// Else we already marked this measure as a part of a motif
+				// Else we already marked this measure as a part of a motif
 			},
 			{measureIndex = measureIndex + 1;}
 		);
@@ -964,13 +951,6 @@ while ({i <= 240},{
 
 	dividers.sort;
 };
-
-// Test the ~getRepeatsDividers function on a test array--make sure to keep commented or
-// delete if running the real thing!
-/*~motifCount = 1;
-~getRepeatsDividers.value(~testArray).postln;
-~flagArray.postln;
-~motifDict.postln;*/
 
 /*Function to go through the flag array and update all consecutive 0s to reflect a new motif; also updates the ~motifDict as it goes*/
 ~handleZeroFlags = {
@@ -998,12 +978,6 @@ while ({i <= 240},{
 		currentIndex = currentIndex + 1;
 	});
 };
-
-// Test the function above--make sure to keep commented if running the real thing!
-/*~handleZeroFlags.value();
-~flagArray.postln;
-~motifDict.postln;
-~motifCount.postln;*/
 
 /*
 * From a list of dividers and a flagarray, determine the motif array.
@@ -1047,8 +1021,6 @@ while ({i <= 240},{
 	});
 	[notes,durs];
 };
-
-// ~determineMotifs.([0,3,6,8,11,14],[1,1,1,1,1,1,2,2,1,1,1,3,3,3,2,2]);
 
 
 /*
@@ -1109,8 +1081,6 @@ while ({i <= 240},{
 	// Return
 	outArr;
 };
-
-// ~getDrumColumn.(10, 20, ~generateDrumRule.(25));
 
 /*
 * Find the cellular automata rule whose middle column, interpreted as drum beats, most closely resembles the input
@@ -1194,8 +1164,6 @@ while ({i <= 240},{
 	out;
 };
 
-// ~durationGenerate.([1,1,2,3,1,2,3,1,2,2,1,4,1,2,3,1,4,1,1]);
-
 /*
 * Takes an array of durations and just gives the beat numbers.
 */
@@ -1209,10 +1177,6 @@ while ({i <= 240},{
 	});
 	out;
 };
-
-// ~test = ~durationGenerate.([1,1,2,3,1,2,3,1,2,2,1,4,1,2,3,1,4,1,1]);
-// ~test.postln;
-// ~durToBeat.(~test,4);
 
 /*
 * Given a set of notes representing a motif, generate a new motif through Markov models
@@ -1250,9 +1214,6 @@ while ({i <= 240},{
 
 	out;
 };
-
-// Test the function above
-// ~markovMotif.([1,2,1,1,3,1,2,5,1,4], 10).postln;
 
 /*
 * Given a melody line and a harmony line, determine what harmony note was playing when this melody note played.
@@ -1295,8 +1256,6 @@ while ({i <= 240},{
 	out;
 };
 
-// ~pullHarmonyNote.([5,4,3,1,2], [1,2,3,4,5], [1,2,3,4,5], [5,4,3,2,1], 1);
-
 /*
 * As a continuation to the above function, pull an entire harmony line from a melody line
 */
@@ -1307,8 +1266,6 @@ while ({i <= 240},{
 	});
 	out;
 };
-
-// ~writeHarmonyLine.([5,4,3,1,2], [1,2,3,4,5], [1,2,3,4,5], [5,4,3,2,1], [1,1,2,2,3,3,4,4,5,5]);
 
 /*
 * Converts a dictionary of motif notes, a dictionary of motif durations, and an array of motif numbers into an array of notes and durations
@@ -1363,8 +1320,6 @@ Returns as [notes, durations]
 	durs;
 };
 
-// ~randomizeDurations.(0.5, [1,2,3,1,3,2,5,4,1,2,3]).postln;
-
 /*
 * Add intermediate notes randomly.
 */
@@ -1384,8 +1339,6 @@ Returns as [notes, durations]
 	});
 	[newDurs, newNotes];
 };
-
-// ~addRandomNotes.(0.5,[1,2,3,1,4,1,5,2,6,3,2], [1,2,3,1,4,1,5,2,6,3,2]);
 
 /*
 * Function that gets the notes and durations for the new melody, returns as array of
@@ -1421,9 +1374,6 @@ Returns as [notes, durations]
 
 };
 
-// Test the function above
- //~getNewMelody.value();
-
 // After a track is selected, set/compute the new and old melody and
 // harmony notes
 ~afterTrackSelected = {
@@ -1452,11 +1402,6 @@ Returns as [notes, durations]
 		~newMelodyNotes); // notes for the harmony
 	seed = 1.0.rand;
 	~newHarmonyRhythms = ~newMelodyRhythms;
-	//~newHarmonyRhythms = ~randomizeDurations.value(seed, ~newMelodyRhythms);
-	/*harmNotesDurs = ~addRandomNotes.value(
-		seed, ~newHarmonyRhythms, ~newHarmonyNotes);
-	~newHarmonyRhythms = harmNotesDurs[0];
-	~newHarmonyNotes = harmNotesDurs[1];*/
 
 	~setSynths.value;
 	~setDrums.value;
@@ -1576,13 +1521,11 @@ Returns as [notes, durations]
 	};
 
 	// Generate the drums for this melody
-//	var drumNotes = generateDrums.(~mel.sum);
-//	var drumNotes = generateDrums.(~oldMelodyRhythms.sum*2);
 	var size = 50;
-	 var drumNotes = [
-	 	~getDrumColumn.(size / 2 + 2, size, ~generateDrumRule.(255.rand)),
-	 	~getDrumColumn.(size / 2 + 1, size, ~generateDrumRule.(255.rand)),
-	 	~getDrumColumn.(size / 2, size, ~generateDrumRule.(255.rand)),
+	var drumNotes = [
+		~getDrumColumn.(size / 2 + 2, size, ~generateDrumRule.(255.rand)),
+		~getDrumColumn.(size / 2 + 1, size, ~generateDrumRule.(255.rand)),
+		~getDrumColumn.(size / 2, size, ~generateDrumRule.(255.rand)),
 		~getDrumColumn.(size / 2 - 1, size, ~generateDrumRule.(255.rand))];
 
 
@@ -1614,42 +1557,6 @@ Returns as [notes, durations]
 	c = Pseq (drumNotes[2],1);
 	d = Pseq (drumNotes[3],1);
 
-
-	// TODO: Test
-	/*while({~new_snare.size < ~newMelodyRhythms.sum}, {
-		~new_snare = ~new_snare ++ ~new_snare;
-	});
-	while({~new_snare.size > ~newMelodyRhythms.sum}, {
-		~new_snare.removeAt(~new_snare.size - 1);
-	});
-
-	while({~new_tom.size < ~newMelodyRhythms.sum}, {
-		~new_tom = ~new_tom ++ ~new_tom;
-	});
-	while({~new_tom.size > ~newMelodyRhythms.sum}, {
-		~new_tom.removeAt(~new_tom.size - 1);
-	});
-
-	while({~new_tom.size < ~newMelodyRhythms.sum}, {
-		~new_tom = ~new_tom ++ ~new_tom;
-	});
-	while({~new_tom.size > ~newMelodyRhythms.sum}, {
-		~new_tom.removeAt(~new_tom.size - 1);
-	});
-
-	while({~new_tom.size < ~newMelodyRhythms.sum}, {
-		~new_tom = ~new_tom ++ ~new_tom;
-	});
-	while({~new_tom.size > ~newMelodyRhythms.sum}, {
-		~new_tom.removeAt(~new_tom.size - 1);
-	});
-
-	a1 = Pseq (~new_snare,1);
-	b2 = Pseq (~new_tom,1);
-	c3 = Pseq (~new_hat,1);
-	d4 = Pseq (~new_bass,1);
-
-*/
 	// DRUM LEVELS
 	// [bass, snare, hat, tom]
 	e = [0.9, 0.9, 0.6, 0.15];
@@ -1664,19 +1571,6 @@ Returns as [notes, durations]
 		\hatLevel, Pseq ([c]*e[2], inf),
 		\tomLevel, Pseq ([d]*e[3], inf)
 	);
-
-
-/*	// TODO: Test
-	~playNewDrums = Pbind(
-		\instrument, \drums,
-		\dur, ~speed,
-		\bassLevel, Pseq ([Pseq (~new_bass,1)]*e[0], 1),
-		\snareLevel, Pseq ([Pseq (~new_snare,1)]*e[1], 1),
-		\hatLevel, Pseq ([Pseq (~new_hat,1)]*e[2], 1),
-		\tomLevel, Pseq ([Pseq (~new_tom,1)]*e[3], 1)
-	);*/
-
-
 
 	//------------------------ \sine ------------------------------\\
 	SynthDef(\sine, { |
@@ -1731,8 +1625,6 @@ Returns as [notes, durations]
 		Saw.ar(tuning4) + (Saw.ar(tuning4/2) * undertone1) + (Saw.ar(tuning4/4) * undertone2);
 		// change these numbers! its awesome!
 		sig = LPF.ar(osc, XLine.ar(20000, 200, 0.1));
-		//sig = LPF.ar(osc, XLine.ar(1000, 100, 0.1));
-		//sig = LPF.ar(osc, XLine.ar(20000, 5000, 0.1));
 		env = EnvGen.ar(Env( [0, amp, (amp / 15), 0], [attack, decay, release], [1, -5, 0] ), doneAction: 2);
 		sig = sig * env;
 		Out.ar(0, sig !2);
@@ -1762,28 +1654,18 @@ Returns as [notes, durations]
 	}).add;
 
 	(
-
-		//~melodySize = ~mel.size;
 		~melodySize = ~oldMelodyNotes.size;
-
 		~melodySize.do{arg i;
-
-			a= exprand(1.0, 5.0).round(0.001);
+			a = exprand(1.0, 5.0).round(0.001);
 			rolloffList.add(a);
-
-
-
 		};
 		rolloffList = rolloffList.sort.reverse;
 	);
-
-	//rhythms = ~durs* tempo;
 
 	rhythms = ~oldMelodyRhythms * tempo;
 
 	~playOldMelody = Pbind(
 		\instrument, ~melodyInstrument,
-		//\midinote, Pseq(~mel, 1),
 		\midinote, Pseq(~oldMelodyNotes, 1),
 		\dur, Pseq(rhythms, 1),
 		\sustain, Pseq(rhythms, 1),
@@ -1793,13 +1675,11 @@ Returns as [notes, durations]
 		\decay, ~melodyDecay,
 		\susLvl, ~melodySusLvl,
 		\release, ~melodyRelease,
-		//\rolloff, Pseq(rolloffList, 1)
 		\rolloff, 1.5
 	);
 
 	~playHarmony = Pbind(
 		\instrument, ~harmonyInstrument,
-		//\midinote, Pseq(~harm, 1),
 		\midinote, Pseq(~oldHarmonyNotes, 1),
 		\dur, Pseq(rhythms, 1),
 		\sustain, Pseq(rhythms, 1),
@@ -1810,11 +1690,8 @@ Returns as [notes, durations]
 		\release, ~harmonyRelease,
 	);
 
-	//rhythms = ~newMelodyRhythms * tempo;
-
 	~playNewMelody = Pbind(
 		\instrument, ~melodyInstrument,
-		//\midinote, Pseq(~mel, 1),
 		\midinote, Pseq(~newMelodyNotes, 1),
 		\dur, Pseq(~newMelodyRhythms * tempo, 1),
 		\sustain, Pseq(~newMelodyRhythms * tempo, 1),
@@ -1824,7 +1701,6 @@ Returns as [notes, durations]
 		\decay, ~melodyDecay,
 		\susLvl, ~melodySusLvl,
 		\release, ~melodyRelease,
-		//\rolloff, Pseq(rolloffList, 1)
 		\rolloff, 1.5
 	);
 
@@ -1840,97 +1716,7 @@ Returns as [notes, durations]
 		\release, ~harmonyRelease,
 	);
 
-	/*Pbind(
-	\instrument, \bass,
-	//\midinote, Pseq(~harm, 1),
-	\midinote, Pseq(~oldHarmonyNotes, 1),
-	\dur, Pseq(rhythms, 1),
-	\sustain, Pseq(rhythms, 1),
-	\amp, 0.2,
-	\attack, 0.003,
-	\decay, 0.75,
-	\susLvl, 0.15,
-	\release, 0.5,
-	).play;*/
-
-
-
-
-	/*Pbind(
-	\instrument, \steel,
-	//\midinote, Pseq(~mel, 1),
-	\midinote, Pseq(~oldMelodyNotes, 1),
-	\dur, Pseq(rhythms, 1),
-	\sustain, Pseq(rhythms, 1),
-	\amp, 0.2,
-	\delay, 0.0001,
-	\attack, 0.0001,
-	\decay, 0.25,
-	\susLvl, 0.15,
-	\release, 0.25,
-	//\rolloff, Pseq(rolloffList, 1)
-	\rolloff, 2
-	).play;
-
-	Pbind(
-	\instrument, \sine,
-	//\midinote, Pseq(~harm, 1),
-	\midinote, Pseq(~oldHarmonyNotes, 1),
-	\dur, Pseq(rhythms, 1),
-	\sustain, Pseq(rhythms, 1),
-	\amp, 0.2,
-	\attack, 0.00,
-	\decay, 0.05,
-	\susLvl, 0.1,
-	\release, 0.5
-	).play;*/
-
-	/*	Pbind(
-	\instrument, \pad,
-	\midinote, Pseq(~oldMelodyNotes-12, 1),
-	\dur, Pseq(rhythms, 1),
-	\sustain, Pseq(rhythms, 1),
-	\amp, 0.3,
-	\attack, 0.01,
-	\decay, 0.15,
-	\susLvl, 0.55,
-	\release, 1.5,
-	).play;*/
-
 };
-
-
-
-/*
-INSTRUCTIONS: How everything works together:
-
-After running xml_read portion of code, ~globalOutputArray has the song
-
-Assuming the harmony voice is number 2, to get the harmony, call ~oldHarm = ~extractLine.(~globalOutputArray, 2);
-
-Kat's code turns the ~globalOutputArray into a duration dictionary (ID -> array of durations for each motif), a note dictionary (ID -> array of notes for each motif), and an array of motifs (call ~determineMotifs on divs and flags). The dictionaries are found by calling ~noteDurDictionaries on the melody index (if the melody is voice 1 in ~globalOutputArray then this is 1), and ~globalOutputArray. (Use ~getRepeatsDividers to get the list of dividers. This function also creates a dictionary of ID-> array mappings as well as an array indicating what motifs each measure is associated with. From here, we may need to create dummy motifs out of the 0 flags in ~flagarray. The last element of the array may or may not be included in the dividers.)
-
-Get the melody using ~extractLineMeasureNotes and then get the dividers from ~getRepeatsDividers.
-~getRepeatsDividers(~extractLineMeasureNotes.value(~globalOutputArray))
-
-Call ~convertToLine on this output, lets say stored into ~oldMel
-
-After this, use the following lines to get the output melody notes and durations:
-~durs = ~durationGenerate.(oldMel[1}); // durations for melody and harmony
-~mel = ~markovMotif.(~oldMel[0], ~durs.size); // notes for melody
-~harm = ~writeHarmonyLine.(~oldMel[0], ~oldMel[1], ~oldHarm[0], ~oldHarm[1], ~mel); // notes for harmony
-
-~harmDurs = ~durs;
-
-// **NEW: to write a varied harmony, have the UI take a number between 0 and 1 (set it to ~seed) and then do ~harmDurs = ~randomizeDurations.value(~seed, ~harmDurs);
-~harmBoth = ~addRandomNotes.value(~seed, ~harmDurs, ~harm);
-~harmDurs = ~harmBoth[0];
-~harm = ~harmBoth[1];
-
-Given that we currently don't take drums as input, drums can be generated just with: (where size is the length of the output you want)
-
-~getDrumColumn.(size / 2, size, ~generateDrumRule.(255.rand)); // drum beats (an array of 0's and 1's where 0's are silences and 1's are drum hits)
-*/
 
 )
 )
