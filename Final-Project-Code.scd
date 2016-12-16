@@ -779,6 +779,7 @@ while ({i <= 240},{
 	for(0, input.size - 2, {arg i;
 		// Go through each note in each measure
 		for(0, input[i].size - 1, {arg j;
+			// Add note and duration from the XML output
 			if(input[i][j][0] == voice, {
 				notesToAdd.add(input[i][j][1]);
 				dursToAdd.add(input[i][j][2]);
@@ -795,14 +796,15 @@ while ({i <= 240},{
 /*
 * Grab the harmony from the output of the MIDI, which is in an array of measures, each in an array of arrays, each containing [voice, pitch, duration]
 */
-
-
 ~extractLine = {arg input, voice;
 	var notes = [];
 	var durations = [];
+	// Go through each measure
 	for(0, input.size - 2, {arg i;
+		// Go through each note in each measure
 		for(0,input[i].size - 1, {arg j;
 			if(input[i][j][0] == voice, {
+				// Add note and duration from the XML output
 				notes = notes ++ input[i][j][1];
 				durations = durations ++ input[i][j][2];
 			});
@@ -846,15 +848,15 @@ while ({i <= 240},{
 	bool;
 };
 
-// Increase every element of the matches array
+/*
+* Increase every element of the matches array
+*/
 ~incrementMatches = { arg matches;
 	matches.size.do({ arg index;
 		matches[index] = matches[index] + 1;
 	});
 	matches;
 };
-
-~incrementMatches.value([1, 2, 3]).postln;
 
 /*
 * Function to find the dividing measures for many repeat sections
@@ -997,7 +999,6 @@ while ({i <= 240},{
 * From the dictionary of (ID -> [start, end)) and the parsed MIDI, build the dictionary of durations and of motifs
 */
 ~noteDurDictionaries = {arg melIndex, map;
-
 	var noteDur = ~extractLineMeasureNoteDurs.(~globalOutputArray, melIndex);
 	var id = 1;
 	var currRanges;
@@ -1156,6 +1157,7 @@ while ({i <= 240},{
 			});
 		});
 
+		// Still durations left
 		if(totalCounts > 0, {
 			out = out.add(totalCounts);
 		});
@@ -1171,6 +1173,7 @@ while ({i <= 240},{
 	var soFar = 0;
 	var out = Array.new(durs.size);
 	for(0,durs.size-1, {arg i;
+		// Add each duration then make it mod bpm
 		soFar = soFar + durs[i];
 		soFar = soFar % bpm;
 		out = out.add(soFar);
@@ -1225,23 +1228,31 @@ while ({i <= 240},{
 	var outIndex;
 	var currDurs = 0;
 	var harmFound = 0;
+
+	// Loop through melody until specific note found
 	for(0, melNotes.size-1, {arg i;
 		if(found == 0, {
 			if(melNotes[i] == note, {
+				// Note found
 				found = 1;
 			}, {
+				// If note not found, increment the durations until it is found
 				dursUntil = dursUntil + melDurs[i];
 			});
 		});
 	});
 
 	if(found == 0, {
+		// If note not in melody, just use the note an octave below as a harmony
 		out = note - 12;
 	}, {
 		for(0, harmNotes.size-1, {arg i;
+			// Iterate through harmony notes until we're at the part of the song that the melody note was at
 			if(harmFound == 0, {
+				// Iterate the current duration value
 				currDurs = currDurs + harmDurs[i];
 				if(currDurs >= dursUntil, {
+					// Correct harmony note found
 					out = harmNotes[i];
 					harmFound = 1;
 				});
@@ -1249,6 +1260,8 @@ while ({i <= 240},{
 		});
 	});
 
+	// Even if melody note is found, there may have been no harmony note above it
+	// In this case, still default to the note an octave below
 	if(harmFound == 0, {
 		out = note - 12;
 	});
@@ -1262,6 +1275,7 @@ while ({i <= 240},{
 ~writeHarmonyLine = {arg melNotes, melDurs, harmNotes, harmDurs, newMel;
 	var out = Array.new(newMel.size);
 	for(0,newMel.size-1, {arg i;
+		// For each melody note, find the harmony note
 		out = out.add(~pullHarmonyNote.(melNotes,melDurs,harmNotes,harmDurs,newMel[i]));
 	});
 	out;
@@ -1310,9 +1324,11 @@ Returns as [notes, durations]
 	var next;
 	var diff;
 	for(0, durs.size - 2, {arg i;
+		// For each note, with random probability steal a random about of the next note value
 		next = durs[i+1];
 		if(seed.coin, {
-			diff = next.rand;
+			// With "seed" probability, steal the next note's value
+			diff = next.rand; // Steal a random value from 0 to next of the next note.
 			durs[i] = durs[i] + diff;
 			durs[i+1] = durs[i+1] - diff;
 		});
@@ -1328,11 +1344,13 @@ Returns as [notes, durations]
 	var newNotes = [];
 	for(0, durs.size - 1, {arg i;
 		if(seed.coin, {
+			// With seed probability, play the note as two notes of half the length
 			newDurs = newDurs ++ [floor(durs[i]/2)];
 			newDurs = newDurs ++ [durs[i] - floor(durs[i]/2)];
 			newNotes = newNotes ++ [notes[i]];
 			newNotes = newNotes ++ [notes[i]];
 		}, {
+			// With 1 - seed probability, keep the note the same as before
 			newDurs = newDurs ++ [durs[i]];
 			newNotes = newNotes ++ [notes[i]];
 		});
@@ -1381,16 +1399,18 @@ Returns as [notes, durations]
 	var seed;
 	var harmNotesDurs;
 
+	// a is the old melody and b is the old harmony
 	a =  ~extractLine.(~globalOutputArray, 1);
 	b =  ~extractLine.(~globalOutputArray, 2);
-
 	~oldMelodyNotes = a[0];
 	~oldMelodyRhythms = a[1];
 	~oldHarmonyNotes = b[0];
 	~oldHarmonyRhythms = b[1];
 
+	// For debug reasons, allow for displaying the post
 	if(~displayDataInPostWindow, {~post.value});
 
+	// Compute the new melody and harmony
 	newMelody = ~getNewMelody.value();
 	~newMelodyNotes = newMelody.at(0);
 	~newMelodyRhythms = newMelody.at(1);
@@ -1400,9 +1420,12 @@ Returns as [notes, durations]
 		~oldHarmonyNotes,
 		~oldHarmonyRhythms,
 		~newMelodyNotes); // notes for the harmony
+
+	// Take a random seed for whether the harmony is randomized
 	seed = 1.0.rand;
 	~newHarmonyRhythms = ~newMelodyRhythms;
 
+	// Set the synths and the drums
 	~setSynths.value;
 	~setDrums.value;
 
