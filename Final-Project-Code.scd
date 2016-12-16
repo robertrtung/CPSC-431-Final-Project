@@ -21,6 +21,9 @@
 // ex. ~globalOutputArray[0] = measure 1, ~globalOutputArray[1] = measure 2, etc...
 // each index contains [voice#, midi_note#, note_length]
 
+/*
+* Analyze the XML file for the MIDI note and durations in each measure.
+*/
 ~analyze = {
 	var rest, pitch, dot, instrument_ID, measure_number, midiNote, duration;
 
